@@ -17,12 +17,12 @@ void intToBitsCharArray(unsigned num, char output[], size_t size) {
 
 
 class MUX2x2 {
-
+private:
+    char * Output[8] = {NULL};
 public:
     char *Input1 = NULL;
     char *Input2 = NULL;
     char *InputSwitch = NULL;
-    char * Output[8] = {NULL};
     size_t dataSizeBits;
 
     MUX2x2(size_t dataSizeBitsInput) {
@@ -484,7 +484,32 @@ public:
             Zero_Out[0] = (out == 0) ? '1' : '0';
             intToBitsCharArray(out, Result_Out, 32);
         }
-
+        else if (strcmp(ALUOp, "01101")==0) //"01101" => sll
+        {
+            uint32_t val1 = stoul(Input1, nullptr, 2);
+            uint32_t val2 = stoul(Input2, nullptr, 2);
+            uint32_t out = val1 << val2;
+            Zero_Out[0] = (out == 0) ? '1' : '0';
+            intToBitsCharArray(out, Result_Out, 32);
+        }
+        else if (strcmp(ALUOp, "01110")==0) //"01110" => srl
+        {
+            uint32_t val1 = stoul(Input1, nullptr, 2);
+            uint32_t val2 = stoul(Input2, nullptr, 2);
+            uint32_t out = val1 >> val2;
+            Zero_Out[0] = (out == 0) ? '1' : '0';
+            intToBitsCharArray(out, Result_Out, 32);
+        }
+        else if (strcmp(ALUOp, "01111")==0) //"01111" => sra
+        {
+            int32_t val1 = stoul(Input1, nullptr, 2);
+            uint32_t val2 = stoul(Input2, nullptr, 2);
+            uint32_t out = val1 >> val2; //Casted to unsigned type so that we are able to extract the bits easily.
+            Zero_Out[0] = (out == 0) ? '1' : '0';
+            intToBitsCharArray(out, Result_Out, 32);
+        }
+        //Todo but not know if required: 10010:addw, 10110:subw, 11101:sllw, 11110:srlw, 11111:sraw, 10011:mulw, 10000:divw, 10001:divuw, 10100:remw, 10101:remuw.
+        //Not tested all these cases properly. ( :-[ )
 
         int i = 0;
         while (i<8)
@@ -554,7 +579,134 @@ public:
 
 };
 
+class RegisterMemx32 {
+private:
+    (char *) Data1Outputs[8] = {NULL};
+    (char *) Data2Outputs[8] = {NULL};
+    char Registers[32][32+1];
+    
+public:
+    char *ReadReg1 = NULL;
+    char *ReadReg2 = NULL;
+    char *WriteReg = NULL;
+    char *WriteData = NULL;
+    char *RegWrite = NULL;
 
+    RegisterMemx32() {
+        ReadReg1 = new char[5+1];
+        memset(ReadReg1, '0', 5);
+        ReadReg2 = new char[5+1];
+        memset(ReadReg2, '0', 5);
+        WriteReg = new char[5+1];
+        memset(WriteReg, '0', 5);
+        WriteData = new char[32+1];
+        memset(WriteData, '0', 32);
+        RegWrite = new char[1+1];
+        (*RegWrite) = '0';
+        
+        for (int i = 0; i < 32; i++)
+        {
+            for (int j = 0; j < 32; j++)
+            {
+                Registers[i][j] = '0';
+            }
+        }
+        
+        
+    }
+
+
+    void Reset() {
+        memset(ReadReg1, '0', 5);
+        memset(ReadReg2, '0', 5);
+        memset(WriteReg, '0', 5);
+        memset(WriteData, '0', 32);
+        (*RegWrite) = '0';
+        
+        for (int i = 0; i < 32; i++)
+        {
+            for (int j = 0; j < 32; j++)
+            {
+                Registers[i][j] = '0';
+            }
+        }
+    }
+
+    void ConnectData1(char * connection)
+    {
+        int i = 0;
+        while (i<8)
+        {
+            if (Data1Outputs[i]==NULL)
+            {
+                Data1Outputs[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void ConnectData2(char * connection)
+    {
+        int i = 0;
+        while (i<8)
+        {
+            if (Data2Outputs[i]==NULL)
+            {
+                Data2Outputs[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void StepRead()
+    {
+        int addr1 = stoi(ReadReg1, nullptr, 2);
+        int addr2 = stoi(ReadReg1, nullptr, 2);
+        int i = 0;
+        while (i<8)
+        {
+            if (Data1Outputs[i]==NULL)
+            {
+                break;
+            }
+            for (int j = 0; j < 32; j++)
+            {
+                *(Data1Outputs[i]+j) = *(Registers[addr1]+j);
+            }
+            i++;
+        }
+
+        i = 0;
+        while (i<8)
+        {
+            if (Data2Outputs[i]==NULL)
+            {
+                break;
+            }
+            for (int j = 0; j < 32; j++)
+            {
+                *(Data2Outputs[i]+j) = *(Registers[addr2]+j);
+            }
+            i++;
+        }
+        
+    }
+
+    ~RegisterMemx32()
+    {
+        delete ReadReg1;
+        delete ReadReg2;
+        delete WriteReg;
+        delete WriteData;
+        delete RegWrite;
+    }
+};
 
 int main(){
 
