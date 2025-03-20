@@ -821,53 +821,217 @@ public:
     void Step()
     {
         
-        char immediate[32];
+        char immediate[32+1];
         if (strcmp(Instruction+25, "0110011")==0 || strcmp(Instruction+25, "0111011")==0) //Rtype
         {
-            /* code */
+            memset(immediate, '0', 32);
         }
         else if (strcmp(Instruction+25, "0000011")==0 || strcmp(Instruction+25, "0010011")==0 || strcmp(Instruction+25, "0011011")==0 || strcmp(Instruction+25, "1100111")==0 || strcmp(Instruction+25, "1110011")==0) //I-type
         {
-            /* code */
+            memset(immediate, Instruction[0], 21);
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+7, 4);
+            immediate[31] = Instruction[11];
         }
         else if (strcmp(Instruction+25, "0100011")==0) //S type
         {
-            /* code */
+            memset(immediate, Instruction[0], 21);
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+21, 4);
+            immediate[31] = Instruction[24];
         }
         else if (strcmp(Instruction+25, "1100011")==0) //SB type
         {
-            /* code */
+            memset(immediate, Instruction[0], 20);
+            immediate[20] = Instruction[24];
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+21, 4);
+            immediate[31] = '0';
         }
         else if (strcmp(Instruction+25, "0010111")==0 || strcmp(Instruction+25, "0110111")==0) //Utype
         {
-            /* code */
+            strncpy(immediate, Instruction, 20);
+            memset(immediate+20, '0', 12);
         }
         else if (strcmp(Instruction+25, "1101111")==0) //UJ type
         {
-            /* code */
+            memset(immediate, Instruction[0], 12);
+            strncpy(immediate+12, Instruction+12, 8);
+            immediate[20] = Instruction[11];
+            strncpy(immediate+21, Instruction+1, 10);
+            immediate[31] = '0';
         }
         
         
         int i = 0;
-        intToBitsCharArray(Instructions[addr], curr_instruction, 32);
         while (i<8)
         {
-            if (InstrOutputs[i]==NULL)
+            if (ImmOutputs[i]==NULL)
             {
                 break;
             }
 
             for (int j = 0; j < 32; j++)
             {
-                *(InstrOutputs[i]+j) = *(curr_instruction+j);
+                *(ImmOutputs[i]+j) = *(immediate+j);
             }
             i++;
         }
     }
 
-    ~InstructionMemx32()
+    ~ImmediateGen()
     {
-        delete InstAddr;
+        delete Instruction;
+    }
+};
+
+enum ControlOutputs {IF_FLUSH, ID_FLUSH, EX_FLUSH, CONTROL_WB, CONTROL_M, CONTROL_EX, IS_BRANCH, IS_JALR, EXCEPTION, JUMP};
+class ControlUnit {
+private:
+    (char *) IF_Flush[8] = {NULL}; //1 Bit
+    (char *) ID_Flush[8] = {NULL}; //1 Bit
+    (char *) EX_Flush[8] = {NULL}; //1 Bit
+
+    (char *) Control_WB[8] = {NULL}; //2 Bit Mem2Reg(1) RegWrite(1)
+    (char *) Control_M[8] = {NULL}; //5 Bit??? MemWrite(1) MemRead(1)
+    (char *) Control_EX[8] = {NULL}; //6 Bit ALUSrc1(2) ALUSrc2(2) ALUOp(2)
+
+    (char *) IsBranch[8] = {NULL}; //1 Bit
+    (char *) IsJalr[8] = {NULL}; //1 Bit
+
+    (char *) Exception[8] = {NULL}; //1 Bit
+    (char *) Jump[8] = {NULL}; //1 Bit
+    
+public:
+    char *Instruction = NULL;
+
+    ControlUnit() {
+        Instruction = new char[32+1];
+        memset(Instruction, '0', 32);
+
+    }
+
+    void Reset() {
+        memset(Instruction, '0', 32);
+    }
+
+    void ConnectOutput(ControlOutputs type, char * connection)
+    {
+
+        int i = 0;
+        char ** selected;
+        switch (type)
+        {
+            case IF_FLUSH:
+                selected = IF_Flush;
+                break;
+            case ID_FLUSH:
+                selected = ID_Flush;
+                break;
+            case EX_FLUSH:
+                selected = EX_Flush;
+                break;
+            case CONTROL_WB:
+                selected = Control_WB;
+                break;
+            case CONTROL_EX:
+                selected = Control_EX;
+                break;
+            case CONTROL_M:
+                selected = Control_M;
+                break;
+            case IS_BRANCH:
+                selected = IsBranch;
+                break;
+            case IS_JALR:
+                selected = IsJalr;
+                break;
+            case EXCEPTION:
+                selected = Exception;
+                break;
+            case JUMP:
+                selected = Jump;
+                break;
+            default:
+                break;
+        }
+        while (i<8)
+        {
+            if (selected[i]==NULL)
+            {
+                selected[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void Step()
+    {
+        
+        char immediate[32+1];
+        if (strcmp(Instruction+25, "0110011")==0 || strcmp(Instruction+25, "0111011")==0) //Rtype
+        {
+            memset(immediate, '0', 32);
+        }
+        else if (strcmp(Instruction+25, "0000011")==0 || strcmp(Instruction+25, "0010011")==0 || strcmp(Instruction+25, "0011011")==0 || strcmp(Instruction+25, "1100111")==0 || strcmp(Instruction+25, "1110011")==0) //I-type
+        {
+            memset(immediate, Instruction[0], 21);
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+7, 4);
+            immediate[31] = Instruction[11];
+        }
+        else if (strcmp(Instruction+25, "0100011")==0) //S type
+        {
+            memset(immediate, Instruction[0], 21);
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+21, 4);
+            immediate[31] = Instruction[24];
+        }
+        else if (strcmp(Instruction+25, "1100011")==0) //SB type
+        {
+            memset(immediate, Instruction[0], 20);
+            immediate[20] = Instruction[24];
+            strncpy(immediate+21, Instruction+1, 6);
+            strncpy(immediate+27, Instruction+21, 4);
+            immediate[31] = '0';
+        }
+        else if (strcmp(Instruction+25, "0010111")==0 || strcmp(Instruction+25, "0110111")==0) //Utype
+        {
+            strncpy(immediate, Instruction, 20);
+            memset(immediate+20, '0', 12);
+        }
+        else if (strcmp(Instruction+25, "1101111")==0) //UJ type
+        {
+            memset(immediate, Instruction[0], 12);
+            strncpy(immediate+12, Instruction+12, 8);
+            immediate[20] = Instruction[11];
+            strncpy(immediate+21, Instruction+1, 10);
+            immediate[31] = '0';
+        }
+        
+        
+        int i = 0;
+        while (i<8)
+        {
+            if (ImmOutputs[i]==NULL)
+            {
+                break;
+            }
+
+            for (int j = 0; j < 32; j++)
+            {
+                *(ImmOutputs[i]+j) = *(immediate+j);
+            }
+            i++;
+        }
+    }
+
+    ~ImmediateGen()
+    {
+        delete Instruction;
     }
 };
 
