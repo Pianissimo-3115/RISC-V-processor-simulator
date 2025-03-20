@@ -4,6 +4,7 @@
 #include <cstring>
 #include <tuple>
 #include <cstdint>
+#include <vector>
 // #include <bitset>
 using namespace std;
 
@@ -707,6 +708,169 @@ public:
         delete RegWrite;
     }
 };
+
+
+class InstructionMemx32 {
+private:
+    (char *) InstrOutputs[8] = {NULL};
+    vector<uint32_t> Instructions;
+    int InstrCount = 0;
+public:
+    char *InstAddr = NULL;
+
+    InstructionMemx32() {
+        InstAddr = new char[32+1];
+        memset(InstAddr, '0', 32);
+
+    }
+
+    void Reset() {
+        memset(InstAddr, '0', 32);
+        Instructions.clear();
+        InstrCount = 0;
+    }
+
+    void ConnectOutput(char * connection)
+    {
+        int i = 0;
+        while (i<8)
+        {
+            if (InstrOutputs[i]==NULL)
+            {
+                InstrOutputs[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void AddInstruction(uint32_t instr)
+    {
+        Instructions.push_back(instr);
+        InstrCount++;
+    }
+
+    void Step()
+    {
+        uint32_t addr = (stoi(InstAddr, nullptr, 2)) >> 2; //Note: confirm this line. shift right by 2 is for dividing by 4 because instruction is 4 byte.
+        if (addr/4 >= InstrCount)
+        {
+            printf("Instruction Address out of range.");
+            return;
+        }
+        
+        int i = 0;
+        char curr_instruction[32];
+        intToBitsCharArray(Instructions[addr], curr_instruction, 32);
+        while (i<8)
+        {
+            if (InstrOutputs[i]==NULL)
+            {
+                break;
+            }
+
+            for (int j = 0; j < 32; j++)
+            {
+                *(InstrOutputs[i]+j) = *(curr_instruction+j);
+            }
+            i++;
+        }
+    }
+
+    ~InstructionMemx32()
+    {
+        delete InstAddr;
+    }
+};
+
+class ImmediateGen {
+private:
+    (char *) ImmOutputs[8] = {NULL};
+
+public:
+    char *Instruction = NULL;
+
+    ImmediateGen() {
+        Instruction = new char[32+1];
+        memset(Instruction, '0', 32);
+
+    }
+
+    void Reset() {
+        memset(Instruction, '0', 32);
+    }
+
+    void ConnectOutput(char * connection)
+    {
+        int i = 0;
+        while (i<8)
+        {
+            if (ImmOutputs[i]==NULL)
+            {
+                ImmOutputs[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void Step()
+    {
+        
+        char immediate[32];
+        if (strcmp(Instruction+25, "0110011")==0 || strcmp(Instruction+25, "0111011")==0) //Rtype
+        {
+            /* code */
+        }
+        else if (strcmp(Instruction+25, "0000011")==0 || strcmp(Instruction+25, "0010011")==0 || strcmp(Instruction+25, "0011011")==0 || strcmp(Instruction+25, "1100111")==0 || strcmp(Instruction+25, "1110011")==0) //I-type
+        {
+            /* code */
+        }
+        else if (strcmp(Instruction+25, "0100011")==0) //S type
+        {
+            /* code */
+        }
+        else if (strcmp(Instruction+25, "1100011")==0) //SB type
+        {
+            /* code */
+        }
+        else if (strcmp(Instruction+25, "0010111")==0 || strcmp(Instruction+25, "0110111")==0) //Utype
+        {
+            /* code */
+        }
+        else if (strcmp(Instruction+25, "1101111")==0) //UJ type
+        {
+            /* code */
+        }
+        
+        
+        int i = 0;
+        intToBitsCharArray(Instructions[addr], curr_instruction, 32);
+        while (i<8)
+        {
+            if (InstrOutputs[i]==NULL)
+            {
+                break;
+            }
+
+            for (int j = 0; j < 32; j++)
+            {
+                *(InstrOutputs[i]+j) = *(curr_instruction+j);
+            }
+            i++;
+        }
+    }
+
+    ~InstructionMemx32()
+    {
+        delete InstAddr;
+    }
+};
+
 
 int main(){
 
