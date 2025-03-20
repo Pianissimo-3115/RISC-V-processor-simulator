@@ -580,7 +580,7 @@ public:
 
 };
 
-class RegisterMemx32 {
+class RegisterMemx32 { // Step Write not done
 private:
     (char *) Data1Outputs[8] = {NULL};
     (char *) Data2Outputs[8] = {NULL};
@@ -1029,11 +1029,161 @@ public:
         }
     }
 
-    ~ImmediateGen()
+    ~ControlUnit()
     {
         delete Instruction;
     }
 };
+
+
+class ALUForwardingUnit {
+private:
+    (char *) CtrlMUX3[8] = {NULL}; //2 Bit
+    (char *) CtrlMUX4[8] = {NULL}; //2 Bit
+
+    
+public:
+    char *Reg1Addr = NULL; //4 bit
+    char *Reg2Addr = NULL; //4 bit
+
+    char *ExMemRegisterRDAddr = NULL; //4 bit
+    char *MemWbRegisterRDAddr = NULL; //4 bit
+
+    char *ExMemRegWrite = NULL; //1 bit
+    char *MemWbRegWrite = NULL; //1 bit
+
+    ALUForwardingUnit() {
+
+        Reg1Addr = new char[4+1];
+        memset(Reg1Addr, '0', 4); //4 bit
+        Reg2Addr = new char[4+1];
+        memset(Reg2Addr, '0', 4); //4 bit
+    
+        ExMemRegisterRDAddr = new char[4+1];
+        memset(ExMemRegisterRDAddr, '0', 4); //4 bit
+        MemWbRegisterRDAddr = new char[4+1];
+        memset(MemWbRegisterRDAddr, '0', 4); //4 bit
+    
+        ExMemRegWrite = new char[1+1];
+        memset(ExMemRegWrite, '0', 1); //1 bit
+        MemWbRegWrite = new char[1+1];
+        memset(MemWbRegWrite, '0', 1); //1 bit
+
+    }
+
+    void Reset() {
+        memset(Reg1Addr, '0', 4);
+        memset(Reg2Addr, '0', 4);
+        memset(ExMemRegisterRDAddr, '0', 4);
+        memset(MemWbRegisterRDAddr, '0', 4);
+        memset(ExMemRegWrite, '0', 1);
+        memset(MemWbRegWrite, '0', 1);
+    }
+
+    void ConnectCtrlMUX3(char * connection)
+    {
+
+        int i = 0;
+        while (i<8)
+        {
+            if (CtrlMUX3[i]==NULL)
+            {
+                CtrlMUX3[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+    void ConnectCtrlMUX4(char * connection)
+    {
+
+        int i = 0;
+        while (i<8)
+        {
+            if (CtrlMUX4[i]==NULL)
+            {
+                CtrlMUX4[i] = connection;
+                return;
+            }
+            i++;
+        }
+        printf("No more outputs can be connected. Connection not made.");
+        return;
+    }
+
+    void Step()
+    {
+        char ctrlmux3_out[2+1];
+        char ctrlmux4_out[2+1];
+        if (MemWbRegWrite[0]=='1' && strcmp("0000", MemWbRegisterRDAddr)!=0 && !(ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg1Addr, ExMemRegisterRDAddr)==0) && strcmp(Reg1Addr, MemWbRegisterRDAddr)==0)
+        {
+            ctrlmux3_out[0]='0';
+            ctrlmux3_out[1]='1';
+        }
+        if (MemWbRegWrite[0]=='1' && strcmp("0000", MemWbRegisterRDAddr)!=0 && !(ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg2Addr, ExMemRegisterRDAddr)==0) && strcmp(Reg2Addr, MemWbRegisterRDAddr)==0)
+        {
+            ctrlmux4_out[0]='0';
+            ctrlmux4_out[1]='1';
+        }
+        if (ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg1Addr, ExMemRegisterRDAddr)==0)
+        {
+            ctrlmux3_out[0]='1';
+            ctrlmux3_out[1]='0';
+        }
+        if (ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg2Addr, ExMemRegisterRDAddr)==0)
+        {
+            ctrlmux4_out[0]='1';
+            ctrlmux4_out[1]='0';
+        }
+        
+        int i = 0;
+        while (i<8)
+        {
+            if (CtrlMUX3[i]==NULL)
+            {
+                break;
+            }
+
+            for (int j = 0; j < 2; j++)
+            {
+                *(CtrlMUX3[i]+j) = *(ctrlmux3_out+j);
+            }
+            i++;
+        }
+        i=0;
+        while (i<8)
+        {
+            if (CtrlMUX4[i]==NULL)
+            {
+                break;
+            }
+
+            for (int j = 0; j < 2; j++)
+            {
+                *(CtrlMUX4[i]+j) = *(ctrlmux4_out+j);
+            }
+            i++;
+        }
+                
+
+    }
+
+    ~ALUForwardingUnit()
+    {
+        delete Reg1Addr;
+        delete Reg2Addr;
+        delete ExMemRegisterRDAddr;
+        delete MemWbRegisterRDAddr;
+        delete ExMemRegWrite;
+        delete MemWbRegWrite;
+    }
+};
+
+
+
+
 
 
 int main(){
