@@ -8,16 +8,26 @@
 // #include <bitset>
 using namespace std;
 
-void intToBitsCharArray(unsigned num, char output[], size_t size) {
+void unsignedToBitsCharArray(unsigned num, char output[], size_t size)  //EARLIER THE NAME WAS MISLEADING
+{
     for (size_t i = 0; i < size; i++) {
         output[size - 1 - i] = (num & (1 << i)) ? '1' : '0';  // Extract bit
     }
     output[size] = '\0';  // Null-terminate for safety
 }
 
+unsigned bitsCharArrayToUnsigned(const char input[], size_t size) {
+    unsigned result = 0;
+    for (size_t i = 0; i < size; i++) {
+        if (input[i] == '1') {
+            result |= (1 << (size - 1 - i));
+        }
+    }
+    return result;
+}
 
 
-class MUX2x2 {
+class MUX2x1 {
 private:
     char * Output[8] = {NULL};
 public:
@@ -26,7 +36,7 @@ public:
     char *InputSwitch = NULL;
     size_t dataSizeBits;
 
-    MUX2x2(size_t dataSizeBitsInput) {
+    MUX2x1(size_t dataSizeBitsInput) {
         dataSizeBits = dataSizeBitsInput;
         Input1 = new char[dataSizeBits+1];
         memset(Input1, '0', dataSizeBits);
@@ -84,7 +94,7 @@ public:
         
     }
 
-    ~MUX2x2()
+    ~MUX2x1()
     {
         delete Input1;
         delete Input2;
@@ -93,7 +103,7 @@ public:
 
 };
 
-class MUX4x4 {
+class MUX4x1 {
 
 private:
     char * Output[8] = {NULL};
@@ -105,7 +115,7 @@ public:
     char *InputSwitch = NULL;
     size_t dataSizeBits;
 
-    MUX4x4(size_t dataSizeBitsInput) {
+    MUX4x1(size_t dataSizeBitsInput) {
         dataSizeBits = dataSizeBitsInput;
         Input1 = new char[dataSizeBits+1];
         memset(Input1, '0', dataSizeBits);
@@ -174,7 +184,7 @@ public:
         
     }
 
-    ~MUX4x4()
+    ~MUX4x1()
     {
         delete Input1;
         delete Input2;
@@ -281,7 +291,7 @@ private:
 public:
     char *Input1 = NULL;
     char *Input2 = NULL;
-    char *ALUOp = NULL;
+    char *ALUControl = NULL;
     size_t dataSizeBits;
 
     ALUx32() {
@@ -289,15 +299,15 @@ public:
         memset(Input1, '0', 32);
         Input2 = new char[32+1];
         memset(Input2, '0', 32);
-        ALUOp = new char[4+1];
-        memset(ALUOp, '0', 4);
+        ALUControl = new char[5+1];
+        memset(ALUControl, '0', 5);
     }
 
 
     void Reset() {
         memset(Input1, '0', 32);
         memset(Input2, '0', 32);
-        memset(ALUOp, '0', 4);
+        memset(ALUControl, '0', 5);
     }
 
     void ConnectResult(char * connection)
@@ -371,143 +381,143 @@ public:
         // char CarryOut_Out[1+1];
         char Zero_Out[1+1];
         memset(Result_Out, '0', 32);
-        if (strcmp(ALUOp, "00000")==0) //"00000" => AND
+        if (strcmp(ALUControl, "00000")==0) //"00000" => AND
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 & val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00001")==0) //"00001" => OR
+        else if (strcmp(ALUControl, "00001")==0) //"00001" => OR
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 | val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00011")==0) //"00011" => XOR
+        else if (strcmp(ALUControl, "00011")==0) //"00011" => XOR
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 ^ val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00010")==0) //"00010" => add
+        else if (strcmp(ALUControl, "00010")==0) //"00010" => add
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 + val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00110")==0) //"00110" => sub
+        else if (strcmp(ALUControl, "00110")==0) //"00110" => sub
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 - val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00100")==0) //"00100" => slt
+        else if (strcmp(ALUControl, "00100")==0) //"00100" => slt
         {
             int32_t val1 = stol(Input1, nullptr, 2);
             int32_t val2 = stol(Input2, nullptr, 2);
-            uint32_t out = (val1 < val2) ? 1 : 0;
+            uint32_t out = (val1 < val2) /* ? 1 : 0 */;     // commented part not needed
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "00101")==0) //"00110" => sltu
+        else if (strcmp(ALUControl, "00101")==0) //"00110" => sltu
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = (val1 < val2) ? 1 : 0;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01000")==0) //"01000" => mul //CONFIRM ALL THE TYPE CONVERSION AND SIGNED AND UNSIGNED STUF IN MUL MULH MULHU etc
+        else if (strcmp(ALUControl, "01000")==0) //"01000" => mul //CONFIRM ALL THE TYPE CONVERSION AND SIGNED AND UNSIGNED STUF IN MUL MULH MULHU etc
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1*val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01001")==0) //"01001" => mulh
+        else if (strcmp(ALUControl, "01001")==0) //"01001" => mulh
         {
             int32_t val1 = stol(Input1, nullptr, 2);
             int32_t val2 = stol(Input2, nullptr, 2);
             int64_t out = (int64_t) val1* (int64_t) val2;
             out >>= 32;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01011")==0) //"01011" => mulhu
+        else if (strcmp(ALUControl, "01011")==0) //"01011" => mulhu
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint64_t out = (uint64_t) val1* (uint64_t) val2;
             out >>= 32;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "11000")==0) //"11000" => div
+        else if (strcmp(ALUControl, "11000")==0) //"11000" => div
         {
             int32_t val1 = stol(Input1, nullptr, 2);
             int32_t val2 = stol(Input2, nullptr, 2);
             uint32_t out = val1 / val2; //Casted to unsigned type so that we are able to extract the bits easily.
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "11001")==0) //"11001" => divu
+        else if (strcmp(ALUControl, "11001")==0) //"11001" => divu
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 / val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "11010")==0) //"11010" => rem
+        else if (strcmp(ALUControl, "11010")==0) //"11010" => rem
         {
             int32_t val1 = stol(Input1, nullptr, 2);
             int32_t val2 = stol(Input2, nullptr, 2);
             uint32_t out = val1 % val2; //Casted to unsigned type so that we are able to extract the bits easily.
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "11011")==0) //"11011" => remu
+        else if (strcmp(ALUControl, "11011")==0) //"11011" => remu
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 % val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01101")==0) //"01101" => sll
+        else if (strcmp(ALUControl, "01101")==0) //"01101" => sll
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 << val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01110")==0) //"01110" => srl
+        else if (strcmp(ALUControl, "01110")==0) //"01110" => srl
         {
             uint32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 >> val2;
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
-        else if (strcmp(ALUOp, "01111")==0) //"01111" => sra
+        else if (strcmp(ALUControl, "01111")==0) //"01111" => sra
         {
             int32_t val1 = stoul(Input1, nullptr, 2);
             uint32_t val2 = stoul(Input2, nullptr, 2);
             uint32_t out = val1 >> val2; //Casted to unsigned type so that we are able to extract the bits easily.
             Zero_Out[0] = (out == 0) ? '1' : '0';
-            intToBitsCharArray(out, Result_Out, 32);
+            unsignedToBitsCharArray(out, Result_Out, 32);
         }
         //Todo but not know if required: 10010:addw, 10110:subw, 11101:sllw, 11110:srlw, 11111:sraw, 10011:mulw, 10000:divw, 10001:divuw, 10100:remw, 10101:remuw.
         //Not tested all these cases properly. ( :-[ )
@@ -575,15 +585,15 @@ public:
     {
         delete Input1;
         delete Input2;
-        delete ALUOp;
+        delete ALUControl;
     }
 
 };
 
-class RegisterMemx32 { // Step Write not done
+class RegisterMemx32 {
 private:
-    (char *) Data1Outputs[8] = {NULL};
-    (char *) Data2Outputs[8] = {NULL};
+    char* Data1Outputs[8] = {NULL};
+    char* Data2Outputs[8] = {NULL};
     char Registers[32][32+1];
     
 public:
@@ -591,7 +601,7 @@ public:
     char *ReadReg2 = NULL;
     char *WriteReg = NULL;
     char *WriteData = NULL;
-    char *RegWrite = NULL;
+    char *WriteEnable = NULL;
 
     RegisterMemx32() {
         ReadReg1 = new char[5+1];
@@ -602,8 +612,8 @@ public:
         memset(WriteReg, '0', 5);
         WriteData = new char[32+1];
         memset(WriteData, '0', 32);
-        RegWrite = new char[1+1];
-        (*RegWrite) = '0';
+        WriteEnable = new char[1+1];
+        (*WriteEnable) = '0';
         
         for (int i = 0; i < 32; i++)
         {
@@ -611,6 +621,7 @@ public:
             {
                 Registers[i][j] = '0';
             }
+            Registers[i][32] = '\0';        // @Arjun, confirm this 😅
         }
         
         
@@ -622,7 +633,7 @@ public:
         memset(ReadReg2, '0', 5);
         memset(WriteReg, '0', 5);
         memset(WriteData, '0', 32);
-        (*RegWrite) = '0';
+        (*WriteEnable) = '0';
         
         for (int i = 0; i < 32; i++)
         {
@@ -699,20 +710,35 @@ public:
         
     }
 
+    void StepWrite()
+    {
+        if(*(this->WriteEnable)=='0')
+        {
+            return;
+        }
+        char *addr = this->WriteReg;
+        unsigned address = bitsCharArrayToUnsigned(addr, 5);
+        for (int i = 0; i < 32; i++)
+        {
+            this->Registers[address][i] = *(WriteData+i);
+        }
+        this->Registers[address][32] = '\0';
+    }
+
     ~RegisterMemx32()
     {
         delete ReadReg1;
         delete ReadReg2;
         delete WriteReg;
         delete WriteData;
-        delete RegWrite;
+        delete WriteEnable;
     }
 };
 
 
 class InstructionMemx32 {
 private:
-    (char *) InstrOutputs[8] = {NULL};
+    char * InstrOutputs[8] = {NULL};
     vector<uint32_t> Instructions;
     int InstrCount = 0;
 public:
@@ -763,7 +789,7 @@ public:
         
         int i = 0;
         char curr_instruction[32];
-        intToBitsCharArray(Instructions[addr], curr_instruction, 32);
+        unsignedToBitsCharArray(Instructions[addr], curr_instruction, 32);
         while (i<8)
         {
             if (InstrOutputs[i]==NULL)
@@ -787,7 +813,7 @@ public:
 
 class ImmediateGen {
 private:
-    (char *) ImmOutputs[8] = {NULL};
+    char * ImmOutputs[8] = {NULL};
 
 public:
     char *Instruction = NULL;
@@ -888,19 +914,19 @@ public:
 enum ControlOutputs {IF_FLUSH, ID_FLUSH, EX_FLUSH, CONTROL_WB, CONTROL_M, CONTROL_EX, IS_BRANCH, IS_JALR, EXCEPTION, JUMP};
 class ControlUnit {
 private:
-    (char *) IF_Flush[8] = {NULL}; //1 Bit
-    (char *) ID_Flush[8] = {NULL}; //1 Bit
-    (char *) EX_Flush[8] = {NULL}; //1 Bit
+    char * IF_Flush[8] = {NULL}; //1 Bit
+    char * ID_Flush[8] = {NULL}; //1 Bit
+    char * EX_Flush[8] = {NULL}; //1 Bit
 
-    (char *) Control_WB[8] = {NULL}; //2 Bit Mem2Reg(1) RegWrite(1)
-    (char *) Control_M[8] = {NULL}; //5 Bit??? MemWrite(1) MemRead(1)
-    (char *) Control_EX[8] = {NULL}; //6 Bit ALUSrc1(2) ALUSrc2(2) ALUOp(2)
+    char * Control_WB[8] = {NULL}; //2 Bit Mem2Reg(1) RegWrite(1)
+    char * Control_M[8] = {NULL}; //5 Bit??? MemWrite(1) MemRead(1)
+    char * Control_EX[8] = {NULL}; //6 Bit ALUSrc1(2) ALUSrc2(2) ALUOp(2)
 
-    (char *) IsBranch[8] = {NULL}; //1 Bit
-    (char *) IsJalr[8] = {NULL}; //1 Bit
+    char * IsBranch[8] = {NULL}; //1 Bit
+    char * IsJalr[8] = {NULL}; //1 Bit
 
-    (char *) Exception[8] = {NULL}; //1 Bit
-    (char *) Jump[8] = {NULL}; //1 Bit
+    char * Exception[8] = {NULL}; //1 Bit
+    char * Jump[8] = {NULL}; //1 Bit
     
 public:
     char *Instruction = NULL;
@@ -1035,11 +1061,77 @@ public:
     }
 };
 
+class ALUControlUnit {
+    private:
+        char ** ALUControlOutput = NULL;
+    public:
+        char *  ALUOp = NULL;
+        char *  Funct7 = NULL;
+        char *  Funct3 = NULL;
+    
+    ALUControlUnit()
+    {
+        ALUOp = new char[2+1];
+        memset(ALUOp, '0', 2);
+        Funct7 = new char[7+1];
+        memset(Funct7, '0', 7);
+        Funct3 = new char[3+1];
+        memset(Funct3, '0', 3);
+    }
+
+    void reset()
+    {
+        memset(ALUOp, '0', 2);
+        memset(Funct7, '0', 7);
+        memset(Funct3, '0', 3);
+        memset(ALUControlOutput, '0', 5);
+    }
+    void connectOutput(char ** connection)  // pointer to char array of ALUControl port of ALU object
+    {
+        ALUControlOutput = connection;
+    }
+    void step() 
+    {
+        switch(bitsCharArrayToUnsigned(ALUOp, 2))
+        {
+            case 0: // ALUOp == 00 => Load or store instruction (addition in memory address)
+                strcpy(*ALUControlOutput, "00010"); // ADD
+                break;
+            case 1: // ALUOp == 01
+                strcpy(*ALUControlOutput, "00110"); // SUB for BEQ
+                break;
+            case 2: // ALUOp == 10
+                if (Funct7[0] == '0' && strcmp(Funct3, "000") == 0)
+                    strcpy(*ALUControlOutput, "00010"); // ADD
+                else if (Funct7[0] == '1' && strcmp(Funct3, "000") == 0)
+                    strcpy(*ALUControlOutput, "00110"); // SUB
+                else if (Funct7[0] == '0' && strcmp(Funct3, "111") == 0)
+                    strcpy(*ALUControlOutput, "00000"); // AND
+                else if (Funct7[0] == '0' && strcmp(Funct3, "110") == 0)
+                    strcpy(*ALUControlOutput, "00001"); // OR
+                else if (Funct7[0] == '0' && strcmp(Funct3, "100") == 0)
+                    strcpy(*ALUControlOutput, "00011"); // XOR
+                else if (Funct7[0] == '0' && strcmp(Funct3, "001") == 0)
+                    strcpy(*ALUControlOutput, "01101"); // SLL
+                else if (Funct7[0] == '0' && strcmp(Funct3, "101") == 0)
+                    strcpy(*ALUControlOutput, "01110"); // SRL
+                else if (Funct7[0] == '1' && strcmp(Funct3, "101") == 0)
+                    strcpy(*ALUControlOutput, "01111"); // SRA
+                else if (Funct7[0] == '0' && strcmp(Funct3, "010") == 0)
+                    strcpy(*ALUControlOutput, "00100"); // SLT
+                else if (Funct7[0] == '0' && strcmp(Funct3, "011") == 0)
+                    strcpy(*ALUControlOutput, "00101"); // SLTU
+                break;
+            default:
+                strcpy(*ALUControlOutput, "00000"); // Default to AND
+                break;
+        }}
+};
 
 class ALUForwardingUnit {
 private:
-    (char *) CtrlMUX3[8] = {NULL}; //2 Bit
-    (char *) CtrlMUX4[8] = {NULL}; //2 Bit
+    char * CtrlMUX3[8] = {NULL}; //2 Bit
+    char * CtrlMUX4[8] = {NULL}; //2 Bit
 
     
 public:
@@ -1195,10 +1287,10 @@ int main(){
     strcpy(output, "0101");
     strcpy(output2, "000000");
     
-    MUX2x2 mux1 = MUX2x2(1);
-    MUX2x2 mux2 = MUX2x2(2);
-    MUX2x2 mux3 = MUX2x2(2);
-    MUX4x4 mux4 = MUX4x4(4);
+    MUX2x1 mux1 = MUX2x1(1);
+    MUX2x1 mux2 = MUX2x1(2);
+    MUX2x1 mux3 = MUX2x1(2);
+    MUX4x1 mux4 = MUX4x1(4);
     Register reg = Register(174);
     ALUx32 alu = ALUx32();
     
@@ -1230,7 +1322,7 @@ int main(){
     reg.ConnectOutput(12, 43, alu.Input1);
     reg.ConnectOutput(0, 31, alu.Input2);
     alu.ConnectResult(output3);
-    strcpy(alu.ALUOp, "0001");
+    strcpy(alu.ALUControl, "0001");
 
     mux1.Step();
     mux2.Step();
