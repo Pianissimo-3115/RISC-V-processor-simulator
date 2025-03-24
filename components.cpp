@@ -1,1340 +1,1477 @@
-
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <tuple>
-#include <cstdint>
-#include <vector>
-// #include <bitset>
+#include<bits/stdc++.h>
 using namespace std;
 
-void unsignedToBitsCharArray(unsigned num, char output[], size_t size)  //EARLIER THE NAME WAS MISLEADING
+string unsignedToBitsString(unsigned num) 
 {
-    for (size_t i = 0; i < size; i++) {
-        output[size - 1 - i] = (num & (1 << i)) ? '1' : '0';  // Extract bit
-    }
-    output[size] = '\0';  // Null-terminate for safety
+    string bits = bitset<32>(num).to_string();
+    return bits;
 }
 
-unsigned bitsCharArrayToUnsigned(const char input[], size_t size) {
-    unsigned result = 0;
-    for (size_t i = 0; i < size; i++) {
-        if (input[i] == '1') {
-            result |= (1 << (size - 1 - i));
-        }
-    }
-    return result;
+string intToBitsString(int num)
+{
+    string bits = bitset<32>(num).to_string();
+    return bits;
 }
 
+unsigned bitsStringToUnsigned(string bits) 
+{
+    unsigned num = bitset<32>(bits).to_ulong();
+    return num;
+}
 
-class MUX2x1 {
-private:
-    char * Output[8] = {NULL};
-public:
-    char *Input1 = NULL;
-    char *Input2 = NULL;
-    char *InputSwitch = NULL;
-    size_t dataSizeBits;
+class MUX2x1
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input1;
+        string Input2;
+        char InputSwitch;
+        size_t dataSizeBits;
 
-    MUX2x1(size_t dataSizeBitsInput) {
-        dataSizeBits = dataSizeBitsInput;
-        Input1 = new char[dataSizeBits+1];
-        memset(Input1, '0', dataSizeBits);
-        Input2 = new char[dataSizeBits+1];
-        memset(Input2, '0', dataSizeBits);
-        InputSwitch = new char[1]{'0'};
-    }
-
-
-    void Reset() {
-        memset(Input1, '0', dataSizeBits);
-        memset(Input2, '0', dataSizeBits);
-        *InputSwitch = {'0'};
-    }
-
-    void ConnectOutput(char * connection)
-    {
-        int i = 0;
-        while (i<8)
+        MUX2x1(size_t dataSizeBitsInput) 
         {
-            if (Output[i]==NULL)
+            dataSizeBits = dataSizeBitsInput;
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+            InputSwitch = '0';
+        }
+
+        void Reset()
+        {
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+            InputSwitch = '0';
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            for(auto port : OutputPorts)
             {
-                Output[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void Step()
-    {
-        char * chosen;
-        if ((*InputSwitch) == '0')
-        {
-            chosen = Input1;
-        }
-        else {
-            chosen = Input2;
-        }
-        int i = 0;
-        while (i<8)
-        {
-            if (Output[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < dataSizeBits; j++)
-            {
-                *(Output[i]+j) = *(chosen+j);
-            }
-            i++;
-        }
-        
-    }
-
-    ~MUX2x1()
-    {
-        delete Input1;
-        delete Input2;
-        delete InputSwitch;
-    }
-
-};
-
-class MUX4x1 {
-
-private:
-    char * Output[8] = {NULL};
-public:
-    char *Input1 = NULL;
-    char *Input2 = NULL;
-    char *Input3 = NULL;
-    char *Input4 = NULL;
-    char *InputSwitch = NULL;
-    size_t dataSizeBits;
-
-    MUX4x1(size_t dataSizeBitsInput) {
-        dataSizeBits = dataSizeBitsInput;
-        Input1 = new char[dataSizeBits+1];
-        memset(Input1, '0', dataSizeBits);
-        Input2 = new char[dataSizeBits+1];
-        memset(Input2, '0', dataSizeBits);
-        Input3 = new char[dataSizeBits+1];
-        memset(Input3, '0', dataSizeBits);
-        Input4 = new char[dataSizeBits+1];
-        memset(Input4, '0', dataSizeBits);
-        InputSwitch = new char[2];
-        memset(InputSwitch, '0', 2);
-    }
-
-
-    void Reset() {
-        memset(Input1, '0', dataSizeBits);
-        memset(Input2, '0', dataSizeBits);
-        memset(Input3, '0', dataSizeBits);
-        memset(Input4, '0', dataSizeBits);
-        memset(InputSwitch, '0', 2);
-        
-    }
-
-    void ConnectOutput(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (Output[i]==NULL)
-            {
-                Output[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void Step()
-    {
-        char * chosen;
-        if ((*InputSwitch) == '0')
-        {
-            if (*(InputSwitch+1) == '0') chosen = Input1;
-            else chosen = Input2;
-        }
-        else {
-            if (*(InputSwitch+1) == '0') chosen = Input3;
-            else chosen = Input4;
-        }
-        
-        int i = 0;
-        while (i<8)
-        {
-            if (Output[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < dataSizeBits; j++)
-            {
-                *(Output[i]+j) = *(chosen+j);
-            }
-            i++;
-        }
-        
-    }
-
-    ~MUX4x1()
-    {
-        delete Input1;
-        delete Input2;
-        delete Input3;
-        delete Input4;
-        delete InputSwitch;
-    }
-
-};
-
-class Register {
-
-private:
-    tuple<int, int, char*> OutputSet[32]{};
-public:
-    char *Data = NULL;
-    char *Write = NULL;
-    char *Flush = NULL;
-    size_t dataSizeBits;
-
-    Register(size_t dataSizeBitsInput) {
-        dataSizeBits = dataSizeBitsInput;
-        Data = new char[dataSizeBits+1];
-        memset(Data, '0', dataSizeBits);
-        Write = new char[1+1];
-        *Write = '0';
-        Flush = new char[1+1];
-        *Flush = '0';
-    }
-
-
-    void Reset() {
-        memset(Data, '0', dataSizeBits);
-        *Flush = '0';
-        *Write = '0';
-    }
-
-    void ConnectOutput(unsigned int start, unsigned int end, char* connection)
-    {
-        if (start>=dataSizeBits || end>=dataSizeBits || end<start || connection==NULL)
-        {
-            printf("Invalid connection. Connection not made.");
-            return;
-        }
-        
-        int i = 0;
-        while (i<32)
-        {
-            if (get<2>(OutputSet[i])==NULL)
-            {
-                OutputSet[i] = make_tuple(start, end, connection);
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void Step()
-    {
-        if (*Flush == '1')
-        {
-            memset(Data, '0', dataSizeBits);    
-        }
-        if (*Write == '1' || *Flush == '1')
-        {
-            int i = 0;
-            while (i<32)
-            {
-                if (get<2>(OutputSet[i])==NULL)
+                assert(port != nullptr); // Ensure port is not null
+                if (InputSwitch == '0')
                 {
+                    *port = Input1;
+                }
+                else
+                {
+                    *port = Input2;
+                }
+            }
+        }
+
+        ~MUX2x1()
+        {
+            OutputPorts.clear();
+        }
+
+    };
+
+class MUX4x1 
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input1;
+        string Input2;
+        string Input3;
+        string Input4;
+        string InputSwitch;
+        size_t dataSizeBits;
+
+        MUX4x1(size_t dataSizeBitsInput) 
+        {
+            dataSizeBits = dataSizeBitsInput;
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+            Input3 = string(dataSizeBits, '0');
+            Input4 = string(dataSizeBits, '0');
+            InputSwitch = "00";
+        }
+
+        void Reset()
+        {
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+            Input3 = string(dataSizeBits, '0');
+            Input4 = string(dataSizeBits, '0');
+            InputSwitch = "00";
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            assert(InputSwitch.size() == 2); // Ensure InputSwitch is 2 bits
+            string chosen;
+            if (InputSwitch == "00") chosen = Input1;
+            else if (InputSwitch == "01") chosen = Input2;
+            else if (InputSwitch == "10") chosen = Input3;
+            else if (InputSwitch == "11") chosen = Input4;
+            else throw invalid_argument("Invalid InputSwitch value");
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = chosen;
+            }
+        }
+
+        ~MUX4x1()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class Register  // Arjun can write this in this style yourself (maine tera implementation iska padha nhi so idk kaise hoga)
+{
+    private:
+
+};
+
+
+class HazardDetectionUnit
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char ID_EX_Memread;
+        string ID_EX_RegisterRd;
+        string IF_ID_RegisterRs1;
+        string IF_ID_RegisterRs2;
+
+        HazardDetectionUnit()
+        {
+            ID_EX_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+        }
+
+        void Reset()
+        {
+            ID_EX_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            if
+            (
+                ID_EX_Memread == '1'
+                && (
+                        ID_EX_RegisterRd == IF_ID_RegisterRs1 
+                        || ID_EX_RegisterRd == IF_ID_RegisterRs2
+                    )
+            )
+            {
+                for(auto port : OutputPorts)
+                {
+                    assert(port != nullptr); // Ensure port is not null
+                    *port = '1';
+                }
+            }
+        }
+
+        ~HazardDetectionUnit()
+        {
+            OutputPorts.clear();
+        }
+
+};
+
+class ALUx32
+{
+    private:
+        unordered_set<string*> OutputPorts;
+        unordered_set<char*> ZeroPorts;
+    public:
+        string Input1;
+        string Input2;
+        unsigned ALUControl;
+
+        ALUx32() 
+        {
+            Input1 = string(32, '0');
+            Input2 = string(32, '0');
+            ALUControl = 0;
+        }
+
+        void Reset()
+        {
+            Input1 = string(32, '0');
+            Input2 = string(32, '0');
+            ALUControl = 0;
+        }
+
+        void ConnectResult(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void ConnectZero(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            ZeroPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            unsigned inp1 = bitsStringToUnsigned(Input1);
+            unsigned inp2 = bitsStringToUnsigned(Input2);
+            string result;
+            char zero;
+            switch(ALUControl)
+            {
+                case 0:         // AND
+                {
+                    unsigned res = inp1 & inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
                     break;
                 }
-                int start = get<0>(OutputSet[i]);
-                int end = get<1>(OutputSet[i]);
-                char* out = get<2>(OutputSet[i]);
-                for (int j = 0; j < end - start + 1; j++)
+                case 1:         // OR
                 {
-                    *(out+j) = *(Data+start+j);
+                    unsigned res = inp1 | inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
                 }
-                i++;
+                case 2:         // add
+                {
+                    unsigned res = inp1 + inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 3:         // XOR
+                {
+                    unsigned res = inp1 ^ inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 4:         // slt
+                {
+                    zero = (((int)inp1 < (int)inp2) ? '1' : '0');
+                    break;
+                }
+                case 5:         // sltu
+                {
+                    zero = ((inp1 < inp2) ? '1' : '0');
+                    break;
+                }
+                case 6:         // Sub
+                {
+                    unsigned res = inp1 - inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 8:         // mul
+                {
+                    long long int res = (long long int)inp1 * (long long int)inp2;
+                    res&=0x00000000FFFFFFFF;
+                    result = intToBitsString((int)res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 9:         // mulh
+                {
+                    long long int res = (long long int)inp1 * (long long int)inp2;
+                    res >>= 32;
+                    result = intToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 11:        // mulhu
+                {
+                    long long unsigned res = (long long unsigned)inp1 * (long long unsigned)inp2;
+                    res&=0x00000000FFFFFFFF;
+                    result = unsignedToBitsString((unsigned)res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 13:        // sll
+                {
+                    unsigned res = inp1 << inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 14:        // srl
+                {
+                    unsigned res = inp1 >> inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 15:        // sra
+                {
+                    unsigned res = (int)inp1 >> inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 24:        // div
+                {
+                    unsigned res = (int)inp1 / (int)inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 25:        // divu
+                {
+                    unsigned res = inp1 / inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 26:        // rem
+                {
+                    unsigned res = (int)inp1 % (int)inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case 27:        // remu
+                {
+                    unsigned res = inp1 % inp2;
+                    result = unsignedToBitsString(res);
+                    zero = (res == 0) ? '1' : '0';
+                    break;
+                }
+                case INT_MAX:
+                    result = string('x',32);
+                default:
+                {
+                    throw invalid_argument("Invalid ALUControl value");
+                    break;
+                }
             }
-        }
-    }
-
-    ~Register()
-    {
-        delete Data;
-        delete Write;
-        delete Flush;
-    }
-
-};
-    
-
-class ALUx32 {
-private:
-    char *Result[8] = {NULL};
-    char *Zero[8] = {NULL};
-    // char *Overflow[8] = {NULL};
-    // char *CarryOut[8] = {NULL};
-
-public:
-    char *Input1 = NULL;
-    char *Input2 = NULL;
-    char *ALUControl = NULL;
-    size_t dataSizeBits;
-
-    ALUx32() {
-        Input1 = new char[32+1];
-        memset(Input1, '0', 32);
-        Input2 = new char[32+1];
-        memset(Input2, '0', 32);
-        ALUControl = new char[5+1];
-        memset(ALUControl, '0', 5);
-    }
-
-
-    void Reset() {
-        memset(Input1, '0', 32);
-        memset(Input2, '0', 32);
-        memset(ALUControl, '0', 5);
-    }
-
-    void ConnectResult(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (Result[i]==NULL)
+            
+            for(auto port : OutputPorts)
             {
-                Result[i] = connection;
-                return;
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
             }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void ConnectZero(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (Zero[i]==NULL)
+            for(auto port : ZeroPorts)
             {
-                Zero[i] = connection;
-                return;
+                assert(port != nullptr); // Ensure port is not null
+                *port = zero;
             }
-            i++;
         }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    // void ConnectOverflow(char * connection)
-    // {
-    //     int i = 0;
-    //     while (i<8)
-    //     {
-    //         if (Overflow[i]==NULL)
-    //         {
-    //             Overflow[i] = connection;
-    //             return;
-    //         }
-    //         i++;
-    //     }
-    //     printf("No more outputs can be connected. Connection not made.");
-    //     return;
-    // }
-
-    // void ConnectCarryOut(char * connection)
-    // {
-    //     int i = 0;
-    //     while (i<8)
-    //     {
-    //         if (CarryOut[i]==NULL)
-    //         {
-    //             CarryOut[i] = connection;
-    //             return;
-    //         }
-    //         i++;
-    //     }
-    //     printf("No more outputs can be connected. Connection not made.");
-    //     return;
-    // }
-
-    void Step()
-    {
-        char Result_Out[32+1];
-        // char Overflow_Out[1+1];
-        // char CarryOut_Out[1+1];
-        char Zero_Out[1+1];
-        memset(Result_Out, '0', 32);
-        if (strcmp(ALUControl, "00000")==0) //"00000" => AND
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 & val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00001")==0) //"00001" => OR
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 | val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00011")==0) //"00011" => XOR
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 ^ val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00010")==0) //"00010" => add
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 + val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00110")==0) //"00110" => sub
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 - val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00100")==0) //"00100" => slt
-        {
-            int32_t val1 = stol(Input1, nullptr, 2);
-            int32_t val2 = stol(Input2, nullptr, 2);
-            uint32_t out = (val1 < val2) /* ? 1 : 0 */;     // commented part not needed
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "00101")==0) //"00110" => sltu
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = (val1 < val2) ? 1 : 0;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01000")==0) //"01000" => mul //CONFIRM ALL THE TYPE CONVERSION AND SIGNED AND UNSIGNED STUF IN MUL MULH MULHU etc
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1*val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01001")==0) //"01001" => mulh
-        {
-            int32_t val1 = stol(Input1, nullptr, 2);
-            int32_t val2 = stol(Input2, nullptr, 2);
-            int64_t out = (int64_t) val1* (int64_t) val2;
-            out >>= 32;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01011")==0) //"01011" => mulhu
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint64_t out = (uint64_t) val1* (uint64_t) val2;
-            out >>= 32;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "11000")==0) //"11000" => div
-        {
-            int32_t val1 = stol(Input1, nullptr, 2);
-            int32_t val2 = stol(Input2, nullptr, 2);
-            uint32_t out = val1 / val2; //Casted to unsigned type so that we are able to extract the bits easily.
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "11001")==0) //"11001" => divu
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 / val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "11010")==0) //"11010" => rem
-        {
-            int32_t val1 = stol(Input1, nullptr, 2);
-            int32_t val2 = stol(Input2, nullptr, 2);
-            uint32_t out = val1 % val2; //Casted to unsigned type so that we are able to extract the bits easily.
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "11011")==0) //"11011" => remu
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 % val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01101")==0) //"01101" => sll
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 << val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01110")==0) //"01110" => srl
-        {
-            uint32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 >> val2;
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        else if (strcmp(ALUControl, "01111")==0) //"01111" => sra
-        {
-            int32_t val1 = stoul(Input1, nullptr, 2);
-            uint32_t val2 = stoul(Input2, nullptr, 2);
-            uint32_t out = val1 >> val2; //Casted to unsigned type so that we are able to extract the bits easily.
-            Zero_Out[0] = (out == 0) ? '1' : '0';
-            unsignedToBitsCharArray(out, Result_Out, 32);
-        }
-        //Todo but not know if required: 10010:addw, 10110:subw, 11101:sllw, 11110:srlw, 11111:sraw, 10011:mulw, 10000:divw, 10001:divuw, 10100:remw, 10101:remuw.
-        //Not tested all these cases properly. ( :-[ )
-
-        int i = 0;
-        while (i<8)
-        {
-            if (Result[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < 32; j++)
-            {
-                *(Result[i]+j) = *(Result_Out+j);
-            }
-            i++;
-        }
-        
-        i = 0;
-        while (i<8)
-        {
-            if (Zero[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < 1; j++)
-            {
-                *(Zero[i]+j) = *(Zero_Out+j);
-            }
-            i++;
-        }
-
-        // i = 0;
-        // while (i<8)
-        // {
-        //     if (Overflow[i]==NULL)
-        //     {
-        //         break;
-        //     }
-        //     for (int j = 0; j < 1; j++)
-        //     {
-        //         *(Overflow[i]+j) = *(Overflow_Out+j);
-        //     }
-        //     i++;
-        // }
-
-        // i = 0;
-        // while (i<8)
-        // {
-        //     if (CarryOut[i]==NULL)
-        //     {
-        //         break;
-        //     }
-        //     for (int j = 0; j < 1; j++)
-        //     {
-        //         *(CarryOut[i]+j) = *(CarryOut_Out+j);
-        //     }
-        //     i++;
-        // }
-
-
-    }
-
     ~ALUx32()
     {
-        delete Input1;
-        delete Input2;
-        delete ALUControl;
-    }
-
-};
-
-class RegisterMemx32 {
-private:
-    char* Data1Outputs[8] = {NULL};
-    char* Data2Outputs[8] = {NULL};
-    char Registers[32][32+1];
-    
-public:
-    char *ReadReg1 = NULL;
-    char *ReadReg2 = NULL;
-    char *WriteReg = NULL;
-    char *WriteData = NULL;
-    char *WriteEnable = NULL;
-
-    RegisterMemx32() {
-        ReadReg1 = new char[5+1];
-        memset(ReadReg1, '0', 5);
-        ReadReg2 = new char[5+1];
-        memset(ReadReg2, '0', 5);
-        WriteReg = new char[5+1];
-        memset(WriteReg, '0', 5);
-        WriteData = new char[32+1];
-        memset(WriteData, '0', 32);
-        WriteEnable = new char[1+1];
-        (*WriteEnable) = '0';
-        
-        for (int i = 0; i < 32; i++)
-        {
-            for (int j = 0; j < 32; j++)
-            {
-                Registers[i][j] = '0';
-            }
-            Registers[i][32] = '\0';        // @Arjun, confirm this 😅
-        }
-        
-        
-    }
-
-
-    void Reset() {
-        memset(ReadReg1, '0', 5);
-        memset(ReadReg2, '0', 5);
-        memset(WriteReg, '0', 5);
-        memset(WriteData, '0', 32);
-        (*WriteEnable) = '0';
-        
-        for (int i = 0; i < 32; i++)
-        {
-            for (int j = 0; j < 32; j++)
-            {
-                Registers[i][j] = '0';
-            }
-        }
-    }
-
-    void ConnectData1(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (Data1Outputs[i]==NULL)
-            {
-                Data1Outputs[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void ConnectData2(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (Data2Outputs[i]==NULL)
-            {
-                Data2Outputs[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void StepRead()
-    {
-        int addr1 = stoi(ReadReg1, nullptr, 2);
-        int addr2 = stoi(ReadReg1, nullptr, 2);
-        int i = 0;
-        while (i<8)
-        {
-            if (Data1Outputs[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < 32; j++)
-            {
-                *(Data1Outputs[i]+j) = *(Registers[addr1]+j);
-            }
-            i++;
-        }
-
-        i = 0;
-        while (i<8)
-        {
-            if (Data2Outputs[i]==NULL)
-            {
-                break;
-            }
-            for (int j = 0; j < 32; j++)
-            {
-                *(Data2Outputs[i]+j) = *(Registers[addr2]+j);
-            }
-            i++;
-        }
-        
-    }
-
-    void StepWrite()
-    {
-        if(*(this->WriteEnable)=='0')
-        {
-            return;
-        }
-        char *addr = this->WriteReg;
-        unsigned address = bitsCharArrayToUnsigned(addr, 5);
-        for (int i = 0; i < 32; i++)
-        {
-            this->Registers[address][i] = *(WriteData+i);
-        }
-        this->Registers[address][32] = '\0';
-    }
-
-    ~RegisterMemx32()
-    {
-        delete ReadReg1;
-        delete ReadReg2;
-        delete WriteReg;
-        delete WriteData;
-        delete WriteEnable;
+        OutputPorts.clear();
+        ZeroPorts.clear();
     }
 };
 
-
-class InstructionMemx32 {
-private:
-    char * InstrOutputs[8] = {NULL};
-    vector<uint32_t> Instructions;
-    int InstrCount = 0;
-public:
-    char *InstAddr = NULL;
-
-    InstructionMemx32() {
-        InstAddr = new char[32+1];
-        memset(InstAddr, '0', 32);
-
-    }
-
-    void Reset() {
-        memset(InstAddr, '0', 32);
-        Instructions.clear();
-        InstrCount = 0;
-    }
-
-    void ConnectOutput(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (InstrOutputs[i]==NULL)
-            {
-                InstrOutputs[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void AddInstruction(uint32_t instr)
-    {
-        Instructions.push_back(instr);
-        InstrCount++;
-    }
-
-    void Step()
-    {
-        uint32_t addr = (stoi(InstAddr, nullptr, 2)) >> 2; //Note: confirm this line. shift right by 2 is for dividing by 4 because instruction is 4 byte.
-        if (addr/4 >= InstrCount)
-        {
-            printf("Instruction Address out of range.");
-            return;
-        }
-        
-        int i = 0;
-        char curr_instruction[32];
-        unsignedToBitsCharArray(Instructions[addr], curr_instruction, 32);
-        while (i<8)
-        {
-            if (InstrOutputs[i]==NULL)
-            {
-                break;
-            }
-
-            for (int j = 0; j < 32; j++)
-            {
-                *(InstrOutputs[i]+j) = *(curr_instruction+j);
-            }
-            i++;
-        }
-    }
-
-    ~InstructionMemx32()
-    {
-        delete InstAddr;
-    }
-};
-
-class ImmediateGen {
-private:
-    char * ImmOutputs[8] = {NULL};
-
-public:
-    char *Instruction = NULL;
-
-    ImmediateGen() {
-        Instruction = new char[32+1];
-        memset(Instruction, '0', 32);
-
-    }
-
-    void Reset() {
-        memset(Instruction, '0', 32);
-    }
-
-    void ConnectOutput(char * connection)
-    {
-        int i = 0;
-        while (i<8)
-        {
-            if (ImmOutputs[i]==NULL)
-            {
-                ImmOutputs[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void Step()
-    {
-        
-        char immediate[32+1];
-        if (strcmp(Instruction+25, "0110011")==0 || strcmp(Instruction+25, "0111011")==0) //Rtype
-        {
-            memset(immediate, '0', 32);
-        }
-        else if (strcmp(Instruction+25, "0000011")==0 || strcmp(Instruction+25, "0010011")==0 || strcmp(Instruction+25, "0011011")==0 || strcmp(Instruction+25, "1100111")==0 || strcmp(Instruction+25, "1110011")==0) //I-type
-        {
-            memset(immediate, Instruction[0], 21);
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+7, 4);
-            immediate[31] = Instruction[11];
-        }
-        else if (strcmp(Instruction+25, "0100011")==0) //S type
-        {
-            memset(immediate, Instruction[0], 21);
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+21, 4);
-            immediate[31] = Instruction[24];
-        }
-        else if (strcmp(Instruction+25, "1100011")==0) //SB type
-        {
-            memset(immediate, Instruction[0], 20);
-            immediate[20] = Instruction[24];
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+21, 4);
-            immediate[31] = '0';
-        }
-        else if (strcmp(Instruction+25, "0010111")==0 || strcmp(Instruction+25, "0110111")==0) //Utype
-        {
-            strncpy(immediate, Instruction, 20);
-            memset(immediate+20, '0', 12);
-        }
-        else if (strcmp(Instruction+25, "1101111")==0) //UJ type
-        {
-            memset(immediate, Instruction[0], 12);
-            strncpy(immediate+12, Instruction+12, 8);
-            immediate[20] = Instruction[11];
-            strncpy(immediate+21, Instruction+1, 10);
-            immediate[31] = '0';
-        }
-        
-        
-        int i = 0;
-        while (i<8)
-        {
-            if (ImmOutputs[i]==NULL)
-            {
-                break;
-            }
-
-            for (int j = 0; j < 32; j++)
-            {
-                *(ImmOutputs[i]+j) = *(immediate+j);
-            }
-            i++;
-        }
-    }
-
-    ~ImmediateGen()
-    {
-        delete Instruction;
-    }
-};
-
-enum ControlOutputs {IF_FLUSH, ID_FLUSH, EX_FLUSH, CONTROL_WB, CONTROL_M, CONTROL_EX, IS_BRANCH, IS_JALR, EXCEPTION, JUMP};
-class ControlUnit {
-private:
-    char * IF_Flush[8] = {NULL}; //1 Bit
-    char * ID_Flush[8] = {NULL}; //1 Bit
-    char * EX_Flush[8] = {NULL}; //1 Bit
-
-    char * Control_WB[8] = {NULL}; //2 Bit Mem2Reg(1) RegWrite(1)
-    char * Control_M[8] = {NULL}; //5 Bit??? MemWrite(1) MemRead(1)
-    char * Control_EX[8] = {NULL}; //6 Bit ALUSrc1(2) ALUSrc2(2) ALUOp(2)
-
-    char * IsBranch[8] = {NULL}; //1 Bit
-    char * IsJalr[8] = {NULL}; //1 Bit
-
-    char * Exception[8] = {NULL}; //1 Bit
-    char * Jump[8] = {NULL}; //1 Bit
-    
-public:
-    char *Instruction = NULL;
-
-    ControlUnit() {
-        Instruction = new char[32+1];
-        memset(Instruction, '0', 32);
-
-    }
-
-    void Reset() {
-        memset(Instruction, '0', 32);
-    }
-
-    void ConnectOutput(ControlOutputs type, char * connection)
-    {
-
-        int i = 0;
-        char ** selected;
-        switch (type)
-        {
-            case IF_FLUSH:
-                selected = IF_Flush;
-                break;
-            case ID_FLUSH:
-                selected = ID_Flush;
-                break;
-            case EX_FLUSH:
-                selected = EX_Flush;
-                break;
-            case CONTROL_WB:
-                selected = Control_WB;
-                break;
-            case CONTROL_EX:
-                selected = Control_EX;
-                break;
-            case CONTROL_M:
-                selected = Control_M;
-                break;
-            case IS_BRANCH:
-                selected = IsBranch;
-                break;
-            case IS_JALR:
-                selected = IsJalr;
-                break;
-            case EXCEPTION:
-                selected = Exception;
-                break;
-            case JUMP:
-                selected = Jump;
-                break;
-            default:
-                break;
-        }
-        while (i<8)
-        {
-            if (selected[i]==NULL)
-            {
-                selected[i] = connection;
-                return;
-            }
-            i++;
-        }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-
-    void Step()
-    {
-        
-        char immediate[32+1];
-        if (strcmp(Instruction+25, "0110011")==0 || strcmp(Instruction+25, "0111011")==0) //Rtype
-        {
-            memset(immediate, '0', 32);
-        }
-        else if (strcmp(Instruction+25, "0000011")==0 || strcmp(Instruction+25, "0010011")==0 || strcmp(Instruction+25, "0011011")==0 || strcmp(Instruction+25, "1100111")==0 || strcmp(Instruction+25, "1110011")==0) //I-type
-        {
-            memset(immediate, Instruction[0], 21);
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+7, 4);
-            immediate[31] = Instruction[11];
-        }
-        else if (strcmp(Instruction+25, "0100011")==0) //S type
-        {
-            memset(immediate, Instruction[0], 21);
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+21, 4);
-            immediate[31] = Instruction[24];
-        }
-        else if (strcmp(Instruction+25, "1100011")==0) //SB type
-        {
-            memset(immediate, Instruction[0], 20);
-            immediate[20] = Instruction[24];
-            strncpy(immediate+21, Instruction+1, 6);
-            strncpy(immediate+27, Instruction+21, 4);
-            immediate[31] = '0';
-        }
-        else if (strcmp(Instruction+25, "0010111")==0 || strcmp(Instruction+25, "0110111")==0) //Utype
-        {
-            strncpy(immediate, Instruction, 20);
-            memset(immediate+20, '0', 12);
-        }
-        else if (strcmp(Instruction+25, "1101111")==0) //UJ type
-        {
-            memset(immediate, Instruction[0], 12);
-            strncpy(immediate+12, Instruction+12, 8);
-            immediate[20] = Instruction[11];
-            strncpy(immediate+21, Instruction+1, 10);
-            immediate[31] = '0';
-        }
-        
-        
-        int i = 0;
-        while (i<8)
-        {
-            if (ImmOutputs[i]==NULL)
-            {
-                break;
-            }
-
-            for (int j = 0; j < 32; j++)
-            {
-                *(ImmOutputs[i]+j) = *(immediate+j);
-            }
-            i++;
-        }
-    }
-
-    ~ControlUnit()
-    {
-        delete Instruction;
-    }
-};
-
-class ALUControlUnit {
+class RegisterMemx32 
+{
     private:
-        char ** ALUControlOutput = NULL;
+        unordered_set<string*> Data1OutputPorts;
+        unordered_set<string*> Data2OutputPorts;
+        string Registers[32];
+    
     public:
-        char *  ALUOp = NULL;
-        char *  Funct7 = NULL;
-        char *  Funct3 = NULL;
-    
-    ALUControlUnit()
-    {
-        ALUOp = new char[2+1];
-        memset(ALUOp, '0', 2);
-        Funct7 = new char[7+1];
-        memset(Funct7, '0', 7);
-        Funct3 = new char[3+1];
-        memset(Funct3, '0', 3);
-    }
+        string ReadReg1;
+        string ReadReg2;
+        string WriteReg;
+        string WriteData;
+        char WriteEnable;
 
-    void reset()
-    {
-        memset(ALUOp, '0', 2);
-        memset(Funct7, '0', 7);
-        memset(Funct3, '0', 3);
-        memset(ALUControlOutput, '0', 5);
-    }
-    void connectOutput(char ** connection)  // pointer to char array of ALUControl port of ALU object
-    {
-        ALUControlOutput = connection;
-    }
-    void step() 
-    {
-        switch(bitsCharArrayToUnsigned(ALUOp, 2))
+        RegisterMemx32() 
         {
-            case 0: // ALUOp == 00 => Load or store instruction (addition in memory address)
-                strcpy(*ALUControlOutput, "00010"); // ADD
-                break;
-            case 1: // ALUOp == 01
-                strcpy(*ALUControlOutput, "00110"); // SUB for BEQ
-                break;
-            case 2: // ALUOp == 10
-                if (Funct7[0] == '0' && strcmp(Funct3, "000") == 0)
-                    strcpy(*ALUControlOutput, "00010"); // ADD
-                else if (Funct7[0] == '1' && strcmp(Funct3, "000") == 0)
-                    strcpy(*ALUControlOutput, "00110"); // SUB
-                else if (Funct7[0] == '0' && strcmp(Funct3, "111") == 0)
-                    strcpy(*ALUControlOutput, "00000"); // AND
-                else if (Funct7[0] == '0' && strcmp(Funct3, "110") == 0)
-                    strcpy(*ALUControlOutput, "00001"); // OR
-                else if (Funct7[0] == '0' && strcmp(Funct3, "100") == 0)
-                    strcpy(*ALUControlOutput, "00011"); // XOR
-                else if (Funct7[0] == '0' && strcmp(Funct3, "001") == 0)
-                    strcpy(*ALUControlOutput, "01101"); // SLL
-                else if (Funct7[0] == '0' && strcmp(Funct3, "101") == 0)
-                    strcpy(*ALUControlOutput, "01110"); // SRL
-                else if (Funct7[0] == '1' && strcmp(Funct3, "101") == 0)
-                    strcpy(*ALUControlOutput, "01111"); // SRA
-                else if (Funct7[0] == '0' && strcmp(Funct3, "010") == 0)
-                    strcpy(*ALUControlOutput, "00100"); // SLT
-                else if (Funct7[0] == '0' && strcmp(Funct3, "011") == 0)
-                    strcpy(*ALUControlOutput, "00101"); // SLTU
-                break;
-            default:
-                strcpy(*ALUControlOutput, "00000"); // Default to AND
-                break;
-        }}
-};
-
-class ALUForwardingUnit {
-private:
-    char * CtrlMUX3[8] = {NULL}; //2 Bit
-    char * CtrlMUX4[8] = {NULL}; //2 Bit
-
-    
-public:
-    char *Reg1Addr = NULL; //4 bit
-    char *Reg2Addr = NULL; //4 bit
-
-    char *ExMemRegisterRDAddr = NULL; //4 bit
-    char *MemWbRegisterRDAddr = NULL; //4 bit
-
-    char *ExMemRegWrite = NULL; //1 bit
-    char *MemWbRegWrite = NULL; //1 bit
-
-    ALUForwardingUnit() {
-
-        Reg1Addr = new char[4+1];
-        memset(Reg1Addr, '0', 4); //4 bit
-        Reg2Addr = new char[4+1];
-        memset(Reg2Addr, '0', 4); //4 bit
-    
-        ExMemRegisterRDAddr = new char[4+1];
-        memset(ExMemRegisterRDAddr, '0', 4); //4 bit
-        MemWbRegisterRDAddr = new char[4+1];
-        memset(MemWbRegisterRDAddr, '0', 4); //4 bit
-    
-        ExMemRegWrite = new char[1+1];
-        memset(ExMemRegWrite, '0', 1); //1 bit
-        MemWbRegWrite = new char[1+1];
-        memset(MemWbRegWrite, '0', 1); //1 bit
-
-    }
-
-    void Reset() {
-        memset(Reg1Addr, '0', 4);
-        memset(Reg2Addr, '0', 4);
-        memset(ExMemRegisterRDAddr, '0', 4);
-        memset(MemWbRegisterRDAddr, '0', 4);
-        memset(ExMemRegWrite, '0', 1);
-        memset(MemWbRegWrite, '0', 1);
-    }
-
-    void ConnectCtrlMUX3(char * connection)
-    {
-
-        int i = 0;
-        while (i<8)
-        {
-            if (CtrlMUX3[i]==NULL)
+            ReadReg1 = string(5, '0');
+            ReadReg2 = string(5, '0');
+            WriteReg = string(5, '0');
+            WriteData = string(32, '0');
+            WriteEnable = '0';
+            for(int i = 0; i < 32; i++)
             {
-                CtrlMUX3[i] = connection;
-                return;
+                Registers[i] = string(32, '0');
             }
-            i++;
         }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
-    void ConnectCtrlMUX4(char * connection)
-    {
 
-        int i = 0;
-        while (i<8)
+        void Reset()
         {
-            if (CtrlMUX4[i]==NULL)
+            ReadReg1 = string(5, '0');
+            ReadReg2 = string(5, '0');
+            WriteReg = string(5, '0');
+            WriteData = string(32, '0');
+            WriteEnable = '0';
+            for(int i = 0; i < 32; i++)
             {
-                CtrlMUX4[i] = connection;
-                return;
+                Registers[i] = string(32, '0');
             }
-            i++;
         }
-        printf("No more outputs can be connected. Connection not made.");
-        return;
-    }
 
-    void Step()
-    {
-        char ctrlmux3_out[2+1];
-        char ctrlmux4_out[2+1];
-        if (MemWbRegWrite[0]=='1' && strcmp("0000", MemWbRegisterRDAddr)!=0 && !(ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg1Addr, ExMemRegisterRDAddr)==0) && strcmp(Reg1Addr, MemWbRegisterRDAddr)==0)
+        void ConnectData1Output(string* connection)
         {
-            ctrlmux3_out[0]='0';
-            ctrlmux3_out[1]='1';
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            Data1OutputPorts.insert(connection);
         }
-        if (MemWbRegWrite[0]=='1' && strcmp("0000", MemWbRegisterRDAddr)!=0 && !(ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg2Addr, ExMemRegisterRDAddr)==0) && strcmp(Reg2Addr, MemWbRegisterRDAddr)==0)
+
+        void ConnectData2Output(string* connection)
         {
-            ctrlmux4_out[0]='0';
-            ctrlmux4_out[1]='1';
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            Data2OutputPorts.insert(connection);
         }
-        if (ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg1Addr, ExMemRegisterRDAddr)==0)
+
+        void StepRead()
         {
-            ctrlmux3_out[0]='1';
-            ctrlmux3_out[1]='0';
-        }
-        if (ExMemRegWrite[0]=='1' && strcmp("0000", ExMemRegisterRDAddr)!=0 && strcmp(Reg2Addr, ExMemRegisterRDAddr)==0)
-        {
-            ctrlmux4_out[0]='1';
-            ctrlmux4_out[1]='0';
+            assert(ReadReg1.size() == 5); // Ensure ReadReg1 is 5 bits
+            assert(ReadReg2.size() == 5); // Ensure ReadReg2 is 5 bits
+            unsigned address1 = bitsStringToUnsigned(ReadReg1);
+            unsigned address2 = bitsStringToUnsigned(ReadReg2);
+            for(auto port : Data1OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = Registers[address1];
+            }
+            for(auto port : Data2OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = Registers[address2];
+            }
         }
         
-        int i = 0;
-        while (i<8)
+        void StepWrite()
         {
-            if (CtrlMUX3[i]==NULL)
-            {
-                break;
-            }
-
-            for (int j = 0; j < 2; j++)
-            {
-                *(CtrlMUX3[i]+j) = *(ctrlmux3_out+j);
-            }
-            i++;
+            if(WriteEnable == '0') return;
+            assert(WriteReg.size() == 5); // Ensure WriteReg is 5 bits
+            unsigned address = bitsStringToUnsigned(WriteReg);
+            Registers[address] = WriteData;
         }
-        i=0;
-        while (i<8)
+        ~RegisterMemx32()
         {
-            if (CtrlMUX4[i]==NULL)
-            {
-                break;
-            }
-
-            for (int j = 0; j < 2; j++)
-            {
-                *(CtrlMUX4[i]+j) = *(ctrlmux4_out+j);
-            }
-            i++;
+            Data1OutputPorts.clear();
+            Data2OutputPorts.clear();
         }
-                
-
-    }
-
-    ~ALUForwardingUnit()
-    {
-        delete Reg1Addr;
-        delete Reg2Addr;
-        delete ExMemRegisterRDAddr;
-        delete MemWbRegisterRDAddr;
-        delete ExMemRegWrite;
-        delete MemWbRegWrite;
-    }
 };
 
+class InstructionMemx32 
+{
+    private:
+        unordered_set<string*> OutputPorts;
+        vector<uint32_t> Instructions;
+        unsigned InstrCount = 0;
 
+    public:
+        int PC;
+        InstructionMemx32(unsigned size) 
+        {
+            this->Instructions=vector<uint32_t>(size, 0);
+            this->InstrCount = size;
+        }
 
+        void Reset()
+        {
+            this->Instructions.clear();
+            this->InstrCount = 0;
+        }
 
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
 
+        void AddInstruction(uint32_t instr)
+        {
+            Instructions.push_back(instr);
+            InstrCount++;
+        }
 
-int main(){
+        void Step()
+        {
+            assert(PC%4 == 0); // Ensure PC is a multiple of 4
+            assert(PC/4 < InstrCount); // Ensure PC is within range
+            string curr_instruction = unsignedToBitsString(Instructions[PC/4]);
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = curr_instruction;
+            }
+        }
 
-    char output[4+1];
-    char output2[6+1];
-    char output3[32+1];
-    output3[32] = '\0';
-    strcpy(output, "0101");
-    strcpy(output2, "000000");
+        ~InstructionMemx32()
+        {
+            OutputPorts.clear();
+        }               
+};
+
+class ImmediateGen 
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Instruction;
+
+        ImmediateGen() 
+        {
+            Instruction = string(32, '0');
+        }
+
+        void Reset()
+        {
+            Instruction = string(32, '0');
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            string immediate = string(32, '0');
+            if (Instruction.substr(25, 7) == "0110011" || Instruction.substr(25, 7) == "0111011") //Rtype
+            {
+                immediate = string(32, '0');
+            }
+            else if (Instruction.substr(25, 7) == "0000011" || Instruction.substr(25, 7) == "0010011" || Instruction.substr(25, 7) == "0011011" || Instruction.substr(25, 7) == "1100111" || Instruction.substr(25, 7) == "1110011") //I-type
+            {
+                for (int i = 0; i < 21; i++)
+                {
+                    immediate[i] = Instruction[0];
+                }
+                for (int i = 21; i < 27; i++)
+                {
+                    immediate[i] = Instruction[i-20];
+                }
+                for (int i = 27; i < 31; i++)
+                {
+                    immediate[i] = Instruction[i-20];
+                }
+                immediate[31] = Instruction[11];
+            }
+            else if (Instruction.substr(25, 7) == "0100011") //S type
+            {
+                for (int i = 0; i < 21; i++)
+                {
+                    immediate[i] = Instruction[0];
+                }
+                for (int i = 21; i < 27; i++)
+                {
+                    immediate[i] = Instruction[i-20];
+                }
+                for (int i = 27; i < 31; i++)
+                {
+                    immediate[i] = Instruction[i-6];
+                }
+                immediate[31] = Instruction[24];
+            }
+            else if (Instruction.substr(25, 7) == "1100011") //SB type
+            {
+                for (int i = 0; i < 20; i++)
+                {
+                    immediate[i] = Instruction[0];
+                }
+                immediate[20] = Instruction[24];
+                for (int i = 21; i < 27; i++)
+                {
+                    immediate[i] = Instruction[i-20];
+                }
+                for (int i = 27; i < 31; i++)
+                {
+                    immediate[i] = Instruction[i-6];
+                }
+                immediate[31] = '0';
+            }
+            else if (Instruction.substr(25, 7) == "0010111" || Instruction.substr(25, 7) == "0110111") //Utype
+            {
+                for (int i = 0; i < 20; i++)
+                {
+                    immediate[i] = Instruction[i];
+                }
+                for (int i = 20; i < 32; i++)
+                {
+                    immediate[i] = '0';
+                }
+            }
+            else if (Instruction.substr(25, 7) == "1101111") //UJ type
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    immediate[i] = Instruction[0];
+                }
+                for (int i = 12; i < 20; i++)
+                {
+                    immediate[i] = Instruction[i];
+                }
+                immediate[20] = Instruction[11];
+                for (int i = 21; i < 31; i++)
+                {
+                    immediate[i] = Instruction[i-20];
+                }
+                immediate[31] = '0';
+            }
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = immediate;
+            }
+        }
+
+        ~ImmediateGen()
+        {
+            OutputPorts.clear();
+        }
+};
+
+using t = tuple<char,       char,       char,       char,       char,       char,       string,     char>;
+//              ALUSrc,     MemtoReg,   RegWrite,   MemRead,    MemWrite,   Branch,     ALUOp,      Jump
+class ControlUnit           
+{
+    private:
+        unordered_set<t*> OutputPorts;
+    public:
+        unsigned opcode;
+
+        ControlUnit()
+        {
+            opcode = 0;
+        }
+
+        void Reset()
+        {
+            opcode = 0;
+        }
+
+        void ConnectOutput(t* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            t result{};
+            switch(opcode)
+            {
+                case 0b0110011:         // R-type
+                {
+                    result = make_tuple('0', '0', '1', '0', '0', '0', "10", '0');
+                }
+                break;
+
+                case 0b0010011:         // I-type
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                }
+                break;
+
+                case 0b0000011:         // Load
+                {
+                    result = make_tuple('1', '1', '1', '1', '0', '0', "00", '0');
+                }
+                break;
+
+                case 0b0100011:         // Store
+                {
+                    result = make_tuple('1', 'x', '0', '0', '1', '0', "00", '0');
+                }
+                break;
+
+                case 0b1100111:         // JALR
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "00", '1');
+                }
+                break;
+
+                case 0b1100011:         // Branch
+                {
+                    result = make_tuple('0', 'x', '0', '0', '0', '1', "01", '0');
+                }
+                break;
+
+                case 0b0110111:         // LUI
+                case 0b0010111:         // AUIPC
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                }
+                break;
+
+                case 0b1101111:         // JAL
+                {
+                    result = make_tuple('x', '0', '1', '0', '0', '0', "xx", '1');
+                }
+            }
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ControlUnit()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ALUControlUnit
+{
+    private:
+        unsigned* OutputPort;
+
+    public:
+        string ALUOp;
+        unsigned Func3;
+        unsigned Func7;      // only 2 bits
+
+        ALUControlUnit()
+        {
+            Func3 = 0;
+            Func7 = 0;
+            ALUOp = "00";
+        }
+
+        void Reset()
+        {
+            ALUOp = "00";
+            Func3 = 0;
+            Func7 = 0;
+        }
+
+        void ConnectOutput(unsigned* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPort = connection;
+        }
+
+        void Step()
+        {
+            unsigned result = 0;
+            
+            
+                if (ALUOp == "10")      // ARITHMETIC OPERATION
+                {
+                    if (Func3 == 0)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 2;     // ADD
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 6;     // SUB
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 8;     // MUL
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 1)
+                    {
+                        if (Func7 == 1)
+                        {
+                            result = 9;     // MULH
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 3)
+                    {
+                        if (Func7 == 0x01)
+                        {
+                            result = 11;    // MULHU
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 4)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 3;     // XOR
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 24;    // DIV
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 5)
+                    {
+                        if (Func7 == 0x01)
+                        {
+                            result = 25;    // DIVU
+                        }
+                    }
+                    else if (Func3 == 6)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 1;     // OR
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 26;    // REM
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 7)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 0;     // AND
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 27;    // REMU
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x1)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 13;    // sll
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x5)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 14;    // srl
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 15;    // sra
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x2)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 4;     // slt
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x3)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 5;     // sltu
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                }
+                
+                else if (ALUOp == "11")    // ARITHMETIC IMMEDIATE OPERATION
+                {
+                    if (Func3 == 0x0)
+                    {
+                        result = 2;     // ADDI
+                    }
+                    else if (Func3 == 0x4)
+                    {
+                        result = 3;     // XORI
+                    }
+                    else if (Func3 == 0x6)
+                    {
+                        result = 1;     // ORI
+                    }
+                    else if (Func3 == 0x7)
+                    {
+                        result = 0;     // ANDI
+                    }
+                    else if (Func3 == 0x1)
+                    {
+                        result = 13;    // SLLI
+                    }
+                    else if (Func3 == 0x5)
+                    {
+                        if (Func7 == 0x00)  // ALTHOUGH THERE DOES NOT EXIST Func7 FOR I-TYPE INSTRUCTIONS, I NEEDED SOMETHING TO PASS 2 BITS OF IMMEDIATE. SO I USED Func7 FOR THAT
+                        {
+                            result = 14;    // SRLI
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 15;    // SRAI
+                        }
+                        else
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x2)
+                    {
+                        result = 4;     // SLTI
+                    }
+                    else if (Func3 == 0x3)
+                    {
+                        result = 5;     // SLTIU
+                    }
+                    else
+                    {
+                        throw invalid_argument("Invalid Func3 value");
+                    }
+                }
+
+                else if (ALUOp == "00")     // ALUOP "00" is load, store, LUI, AUIPC, 
+                {
+                    result = 2;
+                }
+                else if(ALUOp == "xx")
+                {
+                    result = INT_MAX;
+                }
+                else
+                {
+                    throw invalid_argument("Invalid opcode value");
+                }
+            *OutputPort = result;
+        }
+
+        ~ALUControlUnit()
+        {
+            OutputPort = nullptr;
+        }
+};
+
+class ALUForwardingUnit
+{
+    private:
+        string* CtrlMUX3{};
+        string* CtrlMUX4{};
+
+    public:
+        string Reg1Addr{};
+        string Reg2Addr{};
+
+        string ExMemRegisterRDAddr{};
+        string MemWbRegisterRDAddr{};
+
+        string ExMemRegWrite{};
+        string MemWbRegWrite{};
+
+        ALUForwardingUnit() 
+        {
+            Reg1Addr = string(4, '0');
+            Reg2Addr = string(4, '0');
+            ExMemRegisterRDAddr = string(4, '0');
+            MemWbRegisterRDAddr = string(4, '0');
+            ExMemRegWrite = "0";
+            MemWbRegWrite = "0";
+        }
+
+        void Reset()
+        {
+            Reg1Addr = string(4, '0');
+            Reg2Addr = string(4, '0');
+            ExMemRegisterRDAddr = string(4, '0');
+            MemWbRegisterRDAddr = string(4, '0');
+            ExMemRegWrite = "0";
+            MemWbRegWrite = "0";
+        }
+
+        void ConnectCtrlMUX3(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            CtrlMUX3 = connection;
+        }
+
+        void ConnectCtrlMUX4(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            CtrlMUX4 = connection;
+        }
+
+        void Step()
+        {
+            string ctrlmux3_out = "00";
+            string ctrlmux4_out = "00";
+            if 
+            (
+                MemWbRegWrite[0] == '1' 
+                && MemWbRegisterRDAddr != "0000" 
+                && !(   
+                        ExMemRegWrite[0] == '1' 
+                        && ExMemRegisterRDAddr != "0000" 
+                        && Reg1Addr == ExMemRegisterRDAddr
+                    ) 
+                && Reg1Addr == MemWbRegisterRDAddr
+            )
+            {
+                ctrlmux3_out = "01";
+            }
+
+            if 
+            (
+                MemWbRegWrite[0] == '1' 
+                && MemWbRegisterRDAddr != "0000" 
+                && !(   
+                        ExMemRegWrite[0] == '1' 
+                        && ExMemRegisterRDAddr != "0000" 
+                        && Reg2Addr == ExMemRegisterRDAddr
+                    ) 
+                && Reg2Addr == MemWbRegisterRDAddr
+            )
+            {
+                ctrlmux4_out = "01";
+            }
+
+            if 
+            (
+                ExMemRegWrite[0] == '1' 
+                && ExMemRegisterRDAddr != "0000" 
+                && Reg1Addr == ExMemRegisterRDAddr
+            )
+            {
+                ctrlmux3_out="10";
+            }
+
+            if 
+            (
+                ExMemRegWrite[0]=='1' 
+                && ExMemRegisterRDAddr!="0000" 
+                && Reg2Addr==ExMemRegisterRDAddr
+            )
+            {
+                ctrlmux4_out="10";
+            }
+            
+            *CtrlMUX3 = ctrlmux3_out;
+            *CtrlMUX4 = ctrlmux4_out;
+        }
+
+        ~ALUForwardingUnit()
+        {
+            CtrlMUX3 = nullptr;
+            CtrlMUX4 = nullptr;
+        }
+};
+
+class BranchForwardingUnit
+{
+    private:
+
+};
+
+class DataMemory
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        unsigned Address;
+        unsigned* WriteData;
+        int Func3;
+        unordered_map<unsigned, unsigned> Memory;
+        char MemWrite;
+        char MemRead;
+        DataMemory()
+        {
+            Address = 0;
+            WriteData = nullptr;
+            Func3 = 0;
+            MemWrite = '0';
+            MemRead = '0';
+        }
+
+        void Reset()
+        {
+            Address = 0;
+            WriteData = nullptr;
+            Func3 = 0;
+            MemWrite = '0';
+            MemRead = '0';
+            Memory.clear();
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr);    // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void StepWrite()
+        {
+            if (MemWrite == '0') return;
+            assert(MemRead == '0');
+            if (Func3 == 0)         // store byte
+            {
+                bool sign = (*WriteData >> 7) & 1;
+                int res = *WriteData & ((1<<7)-1);
+                if (sign) res = -res;
+                Memory[Address] = (unsigned)res;
+            }
+            else if(Func3 == 1)     // store halfword
+            {
+                bool sign = (*WriteData >> 15) & 1;
+                int res = *WriteData & ((1<<15)-1);
+                if (sign) res = -res;
+                Memory[Address] = (unsigned)res;
+            }
+            else if(Func3 == 2)     // store word
+            {
+                Memory[Address] = *WriteData;
+            }
+        }
+
+        void StepRead()
+        {
+            if (MemRead == '0') return;
+            assert(MemWrite == '0'); // Ensure MemWrite is 0
+            int result = 0;
+            if (Func3 == 0)          // load byte
+            {
+                result = Memory[Address] & ((1<<7)-1);
+                if(Memory[Address] & (1<<7)) result = -result;
+            }
+            else if (Func3 == 1)     // load halfword
+            {
+                result = Memory[Address] & ((1<<15)-1);
+                if(Memory[Address] & (1<<15)) result = -result;
+            }
+            else if (Func3 == 2)     // load word
+            {
+                result = Memory[Address];
+            }
+            else if (Func3 == 4)     // load byte unsigned
+            {
+                result = Memory[Address] & ((1<<7)-1);
+            }
+            else if (Func3 == 5)     // load halfword unsigned
+            {
+                result = Memory[Address] & ((1<<15)-1);
+            }
+            for (auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~DataMemory()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ANDGate
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char Input1;
+        char Input2;
+
+        ANDGate()
+        { 
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void Reset()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            char result = (Input1 == '1' && Input2 == '1') ? '1' : '0';
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ANDGate()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ORGate
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char Input1;
+        char Input2;
+
+        ORGate()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void Reset()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            char result = (Input1 == '1' || Input2 == '1') ? '1' : '0';
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ORGate()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class Adder
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input1;
+        string Input2;
+        size_t dataSizeBits;
+
+        Adder(size_t dataSizeBitsInput)
+        {
+            dataSizeBits = dataSizeBitsInput;
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+        }
+
+        void Reset()
+        {
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            unsigned inp1 = bitsStringToUnsigned(Input1);
+            unsigned inp2 = bitsStringToUnsigned(Input2);
+            unsigned res = inp1 + inp2;
+            string result = unsignedToBitsString(res).substr(32 - dataSizeBits);
+
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~Adder()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class PCAdder
+{
+    private:
+        unordered_set<unsigned*> OutputPorts;
+    public:
+        unsigned PC;
+
+        PCAdder()
+        {
+            PC = 0;
+        }
+
+        void Reset()
+        {
+            PC = 0;
+        }
+
+        void ConnectOutput(unsigned* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            unsigned newPC = PC + 4;
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = newPC;
+            }
+        }
+
+        ~PCAdder()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class LeftShift
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input;
+        size_t dataSizeBits;
+
+        LeftShift(size_t dataSizeBitsInput)
+        {
+            dataSizeBits = dataSizeBitsInput;
+            Input = string(dataSizeBits, '0');
+        }
+
+        void Reset()
+        {
+            Input = string(dataSizeBits, '0');
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            string result = Input.substr(1) + '0';
+            result = result.substr(1);
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~LeftShift()
+        {
+            OutputPorts.clear();
+        }
+};
+
+// int main()
+// {
+//     string output;
+//     string output2;
+//     string output3;
+//     output3 = string(32, '0');
+//     output = "0101";
+//     output2 = "000000";
     
-    MUX2x1 mux1 = MUX2x1(1);
-    MUX2x1 mux2 = MUX2x1(2);
-    MUX2x1 mux3 = MUX2x1(2);
-    MUX4x1 mux4 = MUX4x1(4);
-    Register reg = Register(174);
-    ALUx32 alu = ALUx32();
+//     MUX2x1 mux1 = MUX2x1(1);
+//     MUX2x1 mux2 = MUX2x1(2);
+//     MUX2x1 mux3 = MUX2x1(2);
+//     MUX4x1 mux4 = MUX4x1(4);
+//     Register reg = Register(174);
+//     ALUx32 alu = ALUx32();
     
-    strcpy(mux1.Input1, "0");
-    strcpy(mux1.Input2, "1");
+//     mux1.Input1 = "0";
+//     mux1.Input2 = "1";
     
-    strcpy(mux2.Input1, "00");
-    strcpy(mux2.Input2, "01");
+//     mux2.Input1 = "00";
+//     mux2.Input2 = "01";
     
-    strcpy(mux3.Input1, "10");
-    strcpy(mux3.Input2, "11");
+//     mux3.Input1 = "10";
+//     mux3.Input2 = "11";
     
-    mux1.ConnectOutput(mux2.InputSwitch);
-    mux1.ConnectOutput(mux3.InputSwitch);
+//     mux1.ConnectOutput(&mux2.InputSwitch);
+//     mux1.ConnectOutput(&mux3.InputSwitch);
     
-    mux2.ConnectOutput(mux4.Input2);
-    mux3.ConnectOutput(mux4.Input2+2);
+//     mux2.ConnectOutput(&mux4.Input2);
+//     mux3.ConnectOutput(&mux4.Input2+2);
     
-    strcpy(mux1.InputSwitch, "1");
-    strcpy(mux4.InputSwitch, "01");
+//     mux1.InputSwitch = '1';
+//     mux4.InputSwitch = "01";
     
-    mux4.ConnectOutput(output);
-    mux4.ConnectOutput(reg.Data+13);
+//     mux4.ConnectOutput(&output);
+//     mux4.ConnectOutput(&reg.Data[13]);
+    
+//     reg.ConnectOutput(12,17,&output2);
+//     reg.Write = "1";
+//     reg.Flush = "0";
 
-    reg.ConnectOutput(12,17,output2);
-    strcpy(reg.Write, "1");
-    strcpy(reg.Flush, "0");
+//     reg.ConnectOutput(12, 43, alu.Input1);
+//     reg.ConnectOutput(0, 31, alu.Input2);
+//     alu.ConnectResult(&output3);
+//     alu.ALUControl = 1;
 
-    reg.ConnectOutput(12, 43, alu.Input1);
-    reg.ConnectOutput(0, 31, alu.Input2);
-    alu.ConnectResult(output3);
-    strcpy(alu.ALUControl, "0001");
-
-    mux1.Step();
-    mux2.Step();
-    mux3.Step();
-    mux4.Step();
-    reg.Step();
-    alu.Step();
-
-    printf("%s\n", output);
-    printf("%s\n", output2);
-    printf("%s\n", output3);
-
-    
-
-}
+//     mux1.Step();
+//     mux2.Step();
+// }
