@@ -1,4 +1,6 @@
-# Config files
+# Configuration files
+*.conf
+*.conf.php
 *.json
 
 # Prerequisites
