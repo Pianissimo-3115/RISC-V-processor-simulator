@@ -140,27 +140,86 @@ class Register  // Arjun can write this in this style yourself (maine tera imple
 
 };
 
+
+class HazardDetectionUnit
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char ID_EX_Memread;
+        string ID_EX_RegisterRd;
+        string IF_ID_RegisterRs1;
+        string IF_ID_RegisterRs2;
+
+        HazardDetectionUnit()
+        {
+            ID_EX_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+        }
+
+        void Reset()
+        {
+            ID_EX_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            if
+            (
+                ID_EX_Memread == '1'
+                && (
+                        ID_EX_RegisterRd == IF_ID_RegisterRs1 
+                        || ID_EX_RegisterRd == IF_ID_RegisterRs2
+                    )
+            )
+            {
+                for(auto port : OutputPorts)
+                {
+                    assert(port != nullptr); // Ensure port is not null
+                    *port = '1';
+                }
+            }
+        }
+
+        ~HazardDetectionUnit()
+        {
+            OutputPorts.clear();
+        }
+
+};
+
 class ALUx32
 {
     private:
         unordered_set<string*> OutputPorts;
         unordered_set<char*> ZeroPorts;
     public:
-        unsigned Input1;
-        unsigned Input2;
+        string Input1;
+        string Input2;
         unsigned ALUControl;
 
         ALUx32() 
         {
-            Input1 = 0;
-            Input2 = 0;
+            Input1 = string(32, '0');
+            Input2 = string(32, '0');
             ALUControl = 0;
         }
 
         void Reset()
         {
-            Input1 = 0;
-            Input2 = 0;
+            Input1 = string(32, '0');
+            Input2 = string(32, '0');
             ALUControl = 0;
         }
 
@@ -179,58 +238,60 @@ class ALUx32
 
         void Step()
         {
+            unsigned inp1 = bitsStringToUnsigned(Input1);
+            unsigned inp2 = bitsStringToUnsigned(Input2);
             string result;
             char zero;
             switch(ALUControl)
             {
                 case 0:         // AND
                 {
-                    unsigned res = Input1 & Input2;
+                    unsigned res = inp1 & inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 1:         // OR
                 {
-                    unsigned res = Input1 | Input2;
+                    unsigned res = inp1 | inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 2:         // add
                 {
-                    unsigned res = Input1 + Input2;
+                    unsigned res = inp1 + inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 3:         // XOR
                 {
-                    unsigned res = Input1 ^ Input2;
+                    unsigned res = inp1 ^ inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 4:         // slt
                 {
-                    zero = (((int)Input1 < (int)Input2) ? '1' : '0');
+                    zero = (((int)inp1 < (int)inp2) ? '1' : '0');
                     break;
                 }
                 case 5:         // sltu
                 {
-                    zero = ((Input1 < Input2) ? '1' : '0');
+                    zero = ((inp1 < inp2) ? '1' : '0');
                     break;
                 }
                 case 6:         // Sub
                 {
-                    unsigned res = Input1 - Input2;
+                    unsigned res = inp1 - inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 8:         // mul
                 {
-                    long long int res = (long long int)Input1 * (long long int)Input2;
+                    long long int res = (long long int)inp1 * (long long int)inp2;
                     res&=0x00000000FFFFFFFF;
                     result = intToBitsString((int)res);
                     zero = (res == 0) ? '1' : '0';
@@ -238,7 +299,7 @@ class ALUx32
                 }
                 case 9:         // mulh
                 {
-                    long long int res = (long long int)Input1 * (long long int)Input2;
+                    long long int res = (long long int)inp1 * (long long int)inp2;
                     res >>= 32;
                     result = intToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
@@ -246,7 +307,7 @@ class ALUx32
                 }
                 case 11:        // mulhu
                 {
-                    long long unsigned res = (long long unsigned)Input1 * (long long unsigned)Input2;
+                    long long unsigned res = (long long unsigned)inp1 * (long long unsigned)inp2;
                     res&=0x00000000FFFFFFFF;
                     result = unsignedToBitsString((unsigned)res);
                     zero = (res == 0) ? '1' : '0';
@@ -254,53 +315,55 @@ class ALUx32
                 }
                 case 13:        // sll
                 {
-                    unsigned res = Input1 << Input2;
+                    unsigned res = inp1 << inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 14:        // srl
                 {
-                    unsigned res = Input1 >> Input2;
+                    unsigned res = inp1 >> inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 15:        // sra
                 {
-                    unsigned res = (int)Input1 >> Input2;
+                    unsigned res = (int)inp1 >> inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 24:        // div
                 {
-                    unsigned res = (int)Input1 / (int)Input2;
+                    unsigned res = (int)inp1 / (int)inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 25:        // divu
                 {
-                    unsigned res = Input1 / Input2;
+                    unsigned res = inp1 / inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 26:        // rem
                 {
-                    unsigned res = (int)Input1 % (int)Input2;
+                    unsigned res = (int)inp1 % (int)inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
                 case 27:        // remu
                 {
-                    unsigned res = Input1 % Input2;
+                    unsigned res = inp1 % inp2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
                 }
+                case INT_MAX:
+                    result = string('x',32);
                 default:
                 {
                     throw invalid_argument("Invalid ALUControl value");
@@ -585,35 +648,119 @@ class ImmediateGen
         }
 };
 
-class ControlUnit       // YE MAI KAL KARTA HU
-{
-};
-
-class ALUControlUnit    // work in progress
+using t = tuple<char,       char,       char,       char,       char,       char,       string,     char>;
+//              ALUSrc,     MemtoReg,   RegWrite,   MemRead,    MemWrite,   Branch,     ALUOp,      Jump
+class ControlUnit           
 {
     private:
-        unsigned* OutputPort;
-
+        unordered_set<t*> OutputPorts;
     public:
-        int ALUOp;
-        unsigned Func3;
-        unsigned Func7;      // only 2 bits
         unsigned opcode;
 
-        ALUControlUnit()
+        ControlUnit()
         {
-            ALUOp = 0;
-            Func3 = 0;
-            Func7 = 0;
             opcode = 0;
         }
 
         void Reset()
         {
-            ALUOp = 0;
+            opcode = 0;
+        }
+
+        void ConnectOutput(t* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            t result{};
+            switch(opcode)
+            {
+                case 0b0110011:         // R-type
+                {
+                    result = make_tuple('0', '0', '1', '0', '0', '0', "10", '0');
+                }
+                break;
+
+                case 0b0010011:         // I-type
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                }
+                break;
+
+                case 0b0000011:         // Load
+                {
+                    result = make_tuple('1', '1', '1', '1', '0', '0', "00", '0');
+                }
+                break;
+
+                case 0b0100011:         // Store
+                {
+                    result = make_tuple('1', 'x', '0', '0', '1', '0', "00", '0');
+                }
+                break;
+
+                case 0b1100111:         // JALR
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "00", '1');
+                }
+                break;
+
+                case 0b1100011:         // Branch
+                {
+                    result = make_tuple('0', 'x', '0', '0', '0', '1', "01", '0');
+                }
+                break;
+
+                case 0b0110111:         // LUI
+                case 0b0010111:         // AUIPC
+                {
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                }
+                break;
+
+                case 0b1101111:         // JAL
+                {
+                    result = make_tuple('x', '0', '1', '0', '0', '0', "xx", '1');
+                }
+            }
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ControlUnit()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ALUControlUnit
+{
+    private:
+        unsigned* OutputPort;
+
+    public:
+        string ALUOp;
+        unsigned Func3;
+        unsigned Func7;      // only 2 bits
+
+        ALUControlUnit()
+        {
             Func3 = 0;
             Func7 = 0;
-            opcode = 0;
+            ALUOp = "00";
+        }
+
+        void Reset()
+        {
+            ALUOp = "00";
+            Func3 = 0;
+            Func7 = 0;
         }
 
         void ConnectOutput(unsigned* connection)
@@ -625,9 +772,10 @@ class ALUControlUnit    // work in progress
         void Step()
         {
             unsigned result = 0;
-            switch(opcode)
-            {
-                case 0b0110011:     // ARITHMETIC OPERATION
+            
+            
+                if (ALUOp == "10")      // ARITHMETIC OPERATION
+                {
                     if (Func3 == 0)
                     {
                         if (Func7 == 0x00)
@@ -769,9 +917,10 @@ class ALUControlUnit    // work in progress
                             throw invalid_argument("Invalid Func7 value");
                         }
                     }
-                    break;
-
-                case 0b0010011:    // ARITHMETIC IMMEDIATE OPERATION
+                }
+                
+                else if (ALUOp == "11")    // ARITHMETIC IMMEDIATE OPERATION
+                {
                     if (Func3 == 0x0)
                     {
                         result = 2;     // ADDI
@@ -794,7 +943,7 @@ class ALUControlUnit    // work in progress
                     }
                     else if (Func3 == 0x5)
                     {
-                        if (Func7 == 0x00)
+                        if (Func7 == 0x00)  // ALTHOUGH THERE DOES NOT EXIST Func7 FOR I-TYPE INSTRUCTIONS, I NEEDED SOMETHING TO PASS 2 BITS OF IMMEDIATE. SO I USED Func7 FOR THAT
                         {
                             result = 14;    // SRLI
                         }
@@ -819,30 +968,27 @@ class ALUControlUnit    // work in progress
                     {
                         throw invalid_argument("Invalid Func3 value");
                     }
+                }
 
-                    break;
-
-                case 0b0100011:    // Store instruction
-
-                    break;
-
-                case 0b0110111:     // Load upper immediate instructoin
-
-                    break;
-
-                case 0b0010111:     // Add upper imm to PC instruction
-
-                    break;
-
-
-
-            }
+                else if (ALUOp == "00")     // ALUOP "00" is load, store, LUI, AUIPC, 
+                {
+                    result = 2;
+                }
+                else if(ALUOp == "xx")
+                {
+                    result = INT_MAX;
+                }
+                else
+                {
+                    throw invalid_argument("Invalid opcode value");
+                }
+            *OutputPort = result;
         }
 
-
-
-
-
+        ~ALUControlUnit()
+        {
+            OutputPort = nullptr;
+        }
 };
 
 class ALUForwardingUnit
@@ -895,8 +1041,8 @@ class ALUForwardingUnit
 
         void Step()
         {
-            string ctrlmux3_out ="00";
-            string ctrlmux4_out ="00";
+            string ctrlmux3_out = "00";
+            string ctrlmux4_out = "00";
             if 
             (
                 MemWbRegWrite[0] == '1' 
@@ -956,6 +1102,12 @@ class ALUForwardingUnit
             CtrlMUX3 = nullptr;
             CtrlMUX4 = nullptr;
         }
+};
+
+class BranchForwardingUnit
+{
+    private:
+
 };
 
 class DataMemory
@@ -1024,19 +1176,27 @@ class DataMemory
             if (MemRead == '0') return;
             assert(MemWrite == '0'); // Ensure MemWrite is 0
             int result = 0;
-            if(Func3 == 0)          // load byte
+            if (Func3 == 0)          // load byte
             {
                 result = Memory[Address] & ((1<<7)-1);
                 if(Memory[Address] & (1<<7)) result = -result;
             }
-            else if(Func3 == 1)     // load halfword
+            else if (Func3 == 1)     // load halfword
             {
                 result = Memory[Address] & ((1<<15)-1);
                 if(Memory[Address] & (1<<15)) result = -result;
             }
-            else if(Func3 == 2)     // load word
+            else if (Func3 == 2)     // load word
             {
                 result = Memory[Address];
+            }
+            else if (Func3 == 4)     // load byte unsigned
+            {
+                result = Memory[Address] & ((1<<7)-1);
+            }
+            else if (Func3 == 5)     // load halfword unsigned
+            {
+                result = Memory[Address] & ((1<<15)-1);
             }
             for (auto port : OutputPorts)
             {
@@ -1046,6 +1206,221 @@ class DataMemory
         }
 
         ~DataMemory()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ANDGate
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char Input1;
+        char Input2;
+
+        ANDGate()
+        { 
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void Reset()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            char result = (Input1 == '1' && Input2 == '1') ? '1' : '0';
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ANDGate()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class ORGate
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char Input1;
+        char Input2;
+
+        ORGate()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void Reset()
+        {
+            Input1 = '0';
+            Input2 = '0';
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            char result = (Input1 == '1' || Input2 == '1') ? '1' : '0';
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~ORGate()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class Adder
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input1;
+        string Input2;
+        size_t dataSizeBits;
+
+        Adder(size_t dataSizeBitsInput)
+        {
+            dataSizeBits = dataSizeBitsInput;
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+        }
+
+        void Reset()
+        {
+            Input1 = string(dataSizeBits, '0');
+            Input2 = string(dataSizeBits, '0');
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            unsigned inp1 = bitsStringToUnsigned(Input1);
+            unsigned inp2 = bitsStringToUnsigned(Input2);
+            unsigned res = inp1 + inp2;
+            string result = unsignedToBitsString(res).substr(32 - dataSizeBits);
+
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~Adder()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class PCAdder
+{
+    private:
+        unordered_set<unsigned*> OutputPorts;
+    public:
+        unsigned PC;
+
+        PCAdder()
+        {
+            PC = 0;
+        }
+
+        void Reset()
+        {
+            PC = 0;
+        }
+
+        void ConnectOutput(unsigned* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            unsigned newPC = PC + 4;
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = newPC;
+            }
+        }
+
+        ~PCAdder()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class LeftShift
+{
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        string Input;
+        size_t dataSizeBits;
+
+        LeftShift(size_t dataSizeBitsInput)
+        {
+            dataSizeBits = dataSizeBitsInput;
+            Input = string(dataSizeBits, '0');
+        }
+
+        void Reset()
+        {
+            Input = string(dataSizeBits, '0');
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            string result = Input.substr(1) + '0';
+            result = result.substr(1);
+            for(auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~LeftShift()
         {
             OutputPorts.clear();
         }
