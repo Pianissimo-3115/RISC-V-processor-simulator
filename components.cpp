@@ -184,91 +184,128 @@ class ALUx32
             switch(ALUControl)
             {
                 case 0:         // AND
+                {
                     unsigned res = Input1 & Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 1:         // OR
+                {
                     unsigned res = Input1 | Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 2:         // add
+                {
                     unsigned res = Input1 + Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 3:         // XOR
+                {
                     unsigned res = Input1 ^ Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 4:         // slt
+                {
                     zero = (((int)Input1 < (int)Input2) ? '1' : '0');
                     break;
+                }
                 case 5:         // sltu
+                {
                     zero = ((Input1 < Input2) ? '1' : '0');
                     break;
+                }
                 case 6:         // Sub
+                {
                     unsigned res = Input1 - Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 8:         // mul
+                {
                     long long int res = (long long int)Input1 * (long long int)Input2;
                     res&=0x00000000FFFFFFFF;
                     result = intToBitsString((int)res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 9:         // mulh
+                {
                     long long int res = (long long int)Input1 * (long long int)Input2;
                     res >>= 32;
                     result = intToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 11:        // mulhu
+                {
                     long long unsigned res = (long long unsigned)Input1 * (long long unsigned)Input2;
                     res&=0x00000000FFFFFFFF;
                     result = unsignedToBitsString((unsigned)res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 13:        // sll
+                {
                     unsigned res = Input1 << Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 14:        // srl
+                {
                     unsigned res = Input1 >> Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 15:        // sra
+                {
                     unsigned res = (int)Input1 >> Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 24:        // div
+                {
                     unsigned res = (int)Input1 / (int)Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 25:        // divu
+                {
                     unsigned res = Input1 / Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 26:        // rem
+                {
                     unsigned res = (int)Input1 % (int)Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 case 27:        // remu
+                {
                     unsigned res = Input1 % Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
+                }
                 default:
+                {
                     throw invalid_argument("Invalid ALUControl value");
+                    break;
+                }
             }
             
             for(auto port : OutputPorts)
@@ -735,10 +772,53 @@ class ALUControlUnit    // work in progress
                     break;
 
                 case 0b0010011:    // ARITHMETIC IMMEDIATE OPERATION
-                    
-                    break;
-
-                case 0b0000011:     // Load instruction
+                    if (Func3 == 0x0)
+                    {
+                        result = 2;     // ADDI
+                    }
+                    else if (Func3 == 0x4)
+                    {
+                        result = 3;     // XORI
+                    }
+                    else if (Func3 == 0x6)
+                    {
+                        result = 1;     // ORI
+                    }
+                    else if (Func3 == 0x7)
+                    {
+                        result = 0;     // ANDI
+                    }
+                    else if (Func3 == 0x1)
+                    {
+                        result = 13;    // SLLI
+                    }
+                    else if (Func3 == 0x5)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 14;    // SRLI
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 15;    // SRAI
+                        }
+                        else
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x2)
+                    {
+                        result = 4;     // SLTI
+                    }
+                    else if (Func3 == 0x3)
+                    {
+                        result = 5;     // SLTIU
+                    }
+                    else
+                    {
+                        throw invalid_argument("Invalid Func3 value");
+                    }
 
                     break;
 
