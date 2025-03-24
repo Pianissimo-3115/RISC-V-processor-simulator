@@ -183,84 +183,86 @@ class ALUx32
             char zero;
             switch(ALUControl)
             {
-                case 0:
+                case 0:         // AND
                     unsigned res = Input1 & Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 1:         // subtract, for beq (basically useless if we decide to do beq in ID stage)
+                case 1:         // OR
                     unsigned res = Input1 | Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 2:
+                case 2:         // add
                     unsigned res = Input1 + Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 3:
+                case 3:         // XOR
                     unsigned res = Input1 ^ Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 4:
+                case 4:         // slt
                     zero = (((int)Input1 < (int)Input2) ? '1' : '0');
                     break;
-                case 5:
+                case 5:         // sltu
                     zero = ((Input1 < Input2) ? '1' : '0');
                     break;
-                case 6:
+                case 6:         // Sub
                     unsigned res = Input1 - Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 8:
-                    unsigned res = Input1 * Input2;
-                    result = unsignedToBitsString(res);
+                case 8:         // mul
+                    long long int res = (long long int)Input1 * (long long int)Input2;
+                    res&=0x00000000FFFFFFFF;
+                    result = intToBitsString((int)res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 9:
+                case 9:         // mulh
                     long long int res = (long long int)Input1 * (long long int)Input2;
                     res >>= 32;
                     result = intToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 11:
+                case 11:        // mulhu
                     long long unsigned res = (long long unsigned)Input1 * (long long unsigned)Input2;
-                    result = unsignedToBitsString(res);
+                    res&=0x00000000FFFFFFFF;
+                    result = unsignedToBitsString((unsigned)res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 13:
+                case 13:        // sll
                     unsigned res = Input1 << Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 14:
+                case 14:        // srl
                     unsigned res = Input1 >> Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 15:
+                case 15:        // sra
                     unsigned res = (int)Input1 >> Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 24:
+                case 24:        // div
                     unsigned res = (int)Input1 / (int)Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 25:
+                case 25:        // divu
                     unsigned res = Input1 / Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 26:
+                case 26:        // rem
                     unsigned res = (int)Input1 % (int)Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
                     break;
-                case 27:
+                case 27:        // remu
                     unsigned res = Input1 % Input2;
                     result = unsignedToBitsString(res);
                     zero = (res == 0) ? '1' : '0';
@@ -550,8 +552,217 @@ class ControlUnit       // YE MAI KAL KARTA HU
 {
 };
 
-class ALUControlUnit    // baadme krta hu
+class ALUControlUnit    // work in progress
 {
+    private:
+        unsigned* OutputPort;
+
+    public:
+        int ALUOp;
+        unsigned Func3;
+        unsigned Func7;      // only 2 bits
+        unsigned opcode;
+
+        ALUControlUnit()
+        {
+            ALUOp = 0;
+            Func3 = 0;
+            Func7 = 0;
+            opcode = 0;
+        }
+
+        void Reset()
+        {
+            ALUOp = 0;
+            Func3 = 0;
+            Func7 = 0;
+            opcode = 0;
+        }
+
+        void ConnectOutput(unsigned* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPort = connection;
+        }
+
+        void Step()
+        {
+            unsigned result = 0;
+            switch(opcode)
+            {
+                case 0b0110011:     // ARITHMETIC OPERATION
+                    if (Func3 == 0)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 2;     // ADD
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 6;     // SUB
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 8;     // MUL
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 1)
+                    {
+                        if (Func7 == 1)
+                        {
+                            result = 9;     // MULH
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 3)
+                    {
+                        if (Func7 == 0x01)
+                        {
+                            result = 11;    // MULHU
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 4)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 3;     // XOR
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 24;    // DIV
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 5)
+                    {
+                        if (Func7 == 0x01)
+                        {
+                            result = 25;    // DIVU
+                        }
+                    }
+                    else if (Func3 == 6)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 1;     // OR
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 26;    // REM
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 7)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 0;     // AND
+                        }
+                        else if (Func7 == 0x01)
+                        {
+                            result = 27;    // REMU
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x1)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 13;    // sll
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x5)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 14;    // srl
+                        }
+                        else if (Func7 == 0x20)
+                        {
+                            result = 15;    // sra
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x2)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 4;     // slt
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    else if (Func3 == 0x3)
+                    {
+                        if (Func7 == 0x00)
+                        {
+                            result = 5;     // sltu
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid Func7 value");
+                        }
+                    }
+                    break;
+
+                case 0b0010011:    // ARITHMETIC IMMEDIATE OPERATION
+                    
+                    break;
+
+                case 0b0000011:     // Load instruction
+
+                    break;
+
+                case 0b0100011:    // Store instruction
+
+                    break;
+
+                case 0b0110111:     // Load upper immediate instructoin
+
+                    break;
+
+                case 0b0010111:     // Add upper imm to PC instruction
+
+                    break;
+
+
+
+            }
+        }
+
+
+
+
+
 };
 
 class ALUForwardingUnit
@@ -604,44 +815,50 @@ class ALUForwardingUnit
 
         void Step()
         {
-            string ctrlmux3_out="00";
-            string ctrlmux4_out="00";
-            if (
-                MemWbRegWrite[0]=='1' 
-                && MemWbRegisterRDAddr!="0000" 
-                && !(   ExMemRegWrite[0]=='1' 
-                        && ExMemRegisterRDAddr!="0000" 
-                        && Reg1Addr==ExMemRegisterRDAddr
+            string ctrlmux3_out ="00";
+            string ctrlmux4_out ="00";
+            if 
+            (
+                MemWbRegWrite[0] == '1' 
+                && MemWbRegisterRDAddr != "0000" 
+                && !(   
+                        ExMemRegWrite[0] == '1' 
+                        && ExMemRegisterRDAddr != "0000" 
+                        && Reg1Addr == ExMemRegisterRDAddr
                     ) 
-                && Reg1Addr==MemWbRegisterRDAddr
+                && Reg1Addr == MemWbRegisterRDAddr
             )
             {
-                ctrlmux3_out="01";
+                ctrlmux3_out = "01";
             }
 
-            if (
-                MemWbRegWrite[0]=='1' 
-                && MemWbRegisterRDAddr!="0000" 
-                && !(   ExMemRegWrite[0]=='1' 
-                        && ExMemRegisterRDAddr!="0000" 
-                        && Reg2Addr==ExMemRegisterRDAddr
+            if 
+            (
+                MemWbRegWrite[0] == '1' 
+                && MemWbRegisterRDAddr != "0000" 
+                && !(   
+                        ExMemRegWrite[0] == '1' 
+                        && ExMemRegisterRDAddr != "0000" 
+                        && Reg2Addr == ExMemRegisterRDAddr
                     ) 
-                && Reg2Addr==MemWbRegisterRDAddr
+                && Reg2Addr == MemWbRegisterRDAddr
             )
             {
-                ctrlmux4_out="01";
+                ctrlmux4_out = "01";
             }
 
-            if (
-                ExMemRegWrite[0]=='1' 
-                && ExMemRegisterRDAddr!="0000" 
-                && Reg1Addr==ExMemRegisterRDAddr
+            if 
+            (
+                ExMemRegWrite[0] == '1' 
+                && ExMemRegisterRDAddr != "0000" 
+                && Reg1Addr == ExMemRegisterRDAddr
             )
             {
                 ctrlmux3_out="10";
             }
 
-            if (
+            if 
+            (
                 ExMemRegWrite[0]=='1' 
                 && ExMemRegisterRDAddr!="0000" 
                 && Reg2Addr==ExMemRegisterRDAddr
@@ -661,9 +878,97 @@ class ALUForwardingUnit
         }
 };
 
-class DataMemory        // baadme krlunga
+class DataMemory
 {
+    private:
+        unordered_set<string*> OutputPorts;
+    public:
+        unsigned Address;
+        unsigned* WriteData;
+        int Func3;
+        unordered_map<unsigned, unsigned> Memory;
+        char MemWrite;
+        char MemRead;
+        DataMemory()
+        {
+            Address = 0;
+            WriteData = nullptr;
+            Func3 = 0;
+            MemWrite = '0';
+            MemRead = '0';
+        }
 
+        void Reset()
+        {
+            Address = 0;
+            WriteData = nullptr;
+            Func3 = 0;
+            MemWrite = '0';
+            MemRead = '0';
+            Memory.clear();
+        }
+
+        void ConnectOutput(string* connection)
+        {
+            assert(connection != nullptr);    // Ensure connection is not null
+            assert(connection->size() == 32); // Ensure connection is the correct size
+            OutputPorts.insert(connection);
+        }
+
+        void StepWrite()
+        {
+            if (MemWrite == '0') return;
+            assert(MemRead == '0');
+            if (Func3 == 0)         // store byte
+            {
+                bool sign = (*WriteData >> 7) & 1;
+                int res = *WriteData & ((1<<7)-1);
+                if (sign) res = -res;
+                Memory[Address] = (unsigned)res;
+            }
+            else if(Func3 == 1)     // store halfword
+            {
+                bool sign = (*WriteData >> 15) & 1;
+                int res = *WriteData & ((1<<15)-1);
+                if (sign) res = -res;
+                Memory[Address] = (unsigned)res;
+            }
+            else if(Func3 == 2)     // store word
+            {
+                Memory[Address] = *WriteData;
+            }
+        }
+
+        void StepRead()
+        {
+            if (MemRead == '0') return;
+            assert(MemWrite == '0'); // Ensure MemWrite is 0
+            int result = 0;
+            if(Func3 == 0)          // load byte
+            {
+                result = Memory[Address] & ((1<<7)-1);
+                if(Memory[Address] & (1<<7)) result = -result;
+            }
+            else if(Func3 == 1)     // load halfword
+            {
+                result = Memory[Address] & ((1<<15)-1);
+                if(Memory[Address] & (1<<15)) result = -result;
+            }
+            else if(Func3 == 2)     // load word
+            {
+                result = Memory[Address];
+            }
+            for (auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = result;
+            }
+        }
+
+        ~DataMemory()
+        {
+            OutputPorts.clear();
+        }
 };
 
 // int main()
