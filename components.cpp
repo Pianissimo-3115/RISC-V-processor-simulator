@@ -1,6 +1,9 @@
 #include<bits/stdc++.h>
 using namespace std;
 
+using ControlSignal = tuple<char,       char,       char,       char,       char,       char,       string,     char,   char>;
+//                          ALUSrc,     MemtoReg,   RegWrite,   MemRead,    MemWrite,   Branch,     ALUOp,      Jump,   nop
+
 string unsignedToBitsString(unsigned num) 
 {
     string bits = bitset<32>(num).to_string();
@@ -140,31 +143,39 @@ class Register  // Arjun can write this in this style yourself (maine tera imple
 
 };
 
-
-class HazardDetectionUnit
+class HazardDetectionUnitNoFwd
 {
     private:
         unordered_set<char*> OutputPorts;
     public:
         char ID_EX_Memread;
+        char EX_MEM_Memread;
         string ID_EX_RegisterRd;
         string IF_ID_RegisterRs1;
         string IF_ID_RegisterRs2;
+        string EX_MEM_RegisterRd;
+        unsigned opcode;
 
-        HazardDetectionUnit()
+        HazardDetectionUnitNoFwd()
         {
             ID_EX_Memread = '0';
+            EX_MEM_Memread = '0';
             ID_EX_RegisterRd = string(5, '0');
             IF_ID_RegisterRs1 = string(5, '0');
             IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRd = string(5, '0');
+            opcode = 0;
         }
 
         void Reset()
         {
             ID_EX_Memread = '0';
+            EX_MEM_Memread = '0';
             ID_EX_RegisterRd = string(5, '0');
             IF_ID_RegisterRs1 = string(5, '0');
             IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRd = string(5, '0');
+            opcode = 0;
         }
 
         void ConnectOutput(char* connection)
@@ -175,13 +186,114 @@ class HazardDetectionUnit
 
         void Step()
         {
+            for (auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = '0';
+            }
             if
             (
-                ID_EX_Memread == '1'
-                && (
+                (
+                    ID_EX_Memread == '1'
+                    && 
+                    (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1 
                         || ID_EX_RegisterRd == IF_ID_RegisterRs2
                     )
+                )
+                ||
+                (
+                    EX_MEM_Memread == '1'
+                    &&
+                    (
+                        EX_MEM_RegisterRd == IF_ID_RegisterRs1
+                        || EX_MEM_RegisterRd == IF_ID_RegisterRs2
+                    )
+                )               // EK BAAR RECHECK CONDITIONS OF THE if statement
+            )
+            {
+                for(auto port : OutputPorts)
+                {
+                    assert(port != nullptr); // Ensure port is not null
+                    *port = '1';
+                }
+            }
+        }
+
+        ~HazardDetectionUnitNoFwd()
+        {
+            OutputPorts.clear();
+        }
+};
+
+class HazardDetectionUnit
+{
+    private:
+        unordered_set<char*> OutputPorts;
+    public:
+        char ID_EX_Memread;
+        char EX_MEM_Memread;
+        string ID_EX_RegisterRd;
+        string IF_ID_RegisterRs1;
+        string IF_ID_RegisterRs2;
+        string EX_MEM_RegisterRd;
+        unsigned opcode;
+
+        HazardDetectionUnit()
+        {
+            ID_EX_Memread = '0';
+            EX_MEM_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRd = string(5, '0');
+            opcode = 0;
+        }
+
+        void Reset()
+        {
+            ID_EX_Memread = '0';
+            EX_MEM_Memread = '0';
+            ID_EX_RegisterRd = string(5, '0');
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRd = string(5, '0');
+            opcode = 0;
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPorts.insert(connection);
+        }
+
+        void Step()
+        {
+            for (auto port : OutputPorts)
+            {
+                assert(port != nullptr); // Ensure port is not null
+                *port = '0';
+            }
+            if
+            (
+                (
+                    ID_EX_Memread == '1'
+                    && 
+                    (
+                        ID_EX_RegisterRd == IF_ID_RegisterRs1 
+                        || ID_EX_RegisterRd == IF_ID_RegisterRs2
+                    )
+                )
+                ||
+                (
+                    EX_MEM_Memread == '1'
+                    &&
+                    (
+                        EX_MEM_RegisterRd == IF_ID_RegisterRs1
+                        || EX_MEM_RegisterRd == IF_ID_RegisterRs2
+                    )
+                    && opcode == 0b1100011
+                )
             )
             {
                 for(auto port : OutputPorts)
@@ -238,6 +350,7 @@ class ALUx32
 
         void Step()
         {
+
             unsigned inp1 = bitsStringToUnsigned(Input1);
             unsigned inp2 = bitsStringToUnsigned(Input2);
             string result;
@@ -648,26 +761,26 @@ class ImmediateGen
         }
 };
 
-using t = tuple<char,       char,       char,       char,       char,       char,       string,     char>;
-//              ALUSrc,     MemtoReg,   RegWrite,   MemRead,    MemWrite,   Branch,     ALUOp,      Jump
 class ControlUnit           
 {
     private:
-        unordered_set<t*> OutputPorts;
+        unordered_set<ControlSignal*> OutputPorts;
     public:
         unsigned opcode;
-
+        char hazard{};
         ControlUnit()
         {
             opcode = 0;
+            hazard = '0';
         }
 
         void Reset()
         {
             opcode = 0;
+            hazard = '0';
         }
 
-        void ConnectOutput(t* connection)
+        void ConnectOutput(ControlSignal* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPorts.insert(connection);
@@ -675,55 +788,60 @@ class ControlUnit
 
         void Step()
         {
-            t result{};
+            ControlSignal result{};
+            if (hazard)
+            {
+                result = make_tuple('0', '0', '0', '0', '0', '0', "00", '0', '1');
+                return;
+            }
             switch(opcode)
             {
                 case 0b0110011:         // R-type
                 {
-                    result = make_tuple('0', '0', '1', '0', '0', '0', "10", '0');
+                    result = make_tuple('0', '0', '1', '0', '0', '0', "10", '0', '0');
                 }
                 break;
 
                 case 0b0010011:         // I-type
                 {
-                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0', '0');
                 }
                 break;
 
                 case 0b0000011:         // Load
                 {
-                    result = make_tuple('1', '1', '1', '1', '0', '0', "00", '0');
+                    result = make_tuple('1', '1', '1', '1', '0', '0', "00", '0', '0');
                 }
                 break;
 
                 case 0b0100011:         // Store
                 {
-                    result = make_tuple('1', 'x', '0', '0', '1', '0', "00", '0');
+                    result = make_tuple('1', 'x', '0', '0', '1', '0', "00", '0', '0');
                 }
                 break;
 
                 case 0b1100111:         // JALR
                 {
-                    result = make_tuple('1', '0', '1', '0', '0', '0', "00", '1');
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "00", '1', '0');
                 }
                 break;
 
                 case 0b1100011:         // Branch
                 {
-                    result = make_tuple('0', 'x', '0', '0', '0', '1', "01", '0');
+                    result = make_tuple('0', 'x', '0', '0', '0', '1', "01", '0', '0');
                 }
                 break;
 
                 case 0b0110111:         // LUI
                 case 0b0010111:         // AUIPC
                 {
-                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0');
+                    result = make_tuple('1', '0', '1', '0', '0', '0', "11", '0', '0');
                 }
                 break;
 
                 case 0b1101111:         // JAL
                 {
-                    result = make_tuple('x', '0', '1', '0', '0', '0', "xx", '1');
+                    result = make_tuple('x', '0', '1', '0', '0', '0', "xx", '1', '0');
                 }
             }
             for(auto port : OutputPorts)
@@ -1000,31 +1118,34 @@ class ALUForwardingUnit
     public:
         string Reg1Addr{};
         string Reg2Addr{};
-
-        string ExMemRegisterRDAddr{};
-        string MemWbRegisterRDAddr{};
-
-        string ExMemRegWrite{};
-        string MemWbRegWrite{};
+        string EX_MEM_RegisterRDAddr{};
+        string MEM_WB_RegisterRDAddr{};
+        
+        string EX_MEM_RegWrite{};
+        string MEM_WB_RegWrite{};
+        char branch{};
 
         ALUForwardingUnit() 
         {
             Reg1Addr = string(4, '0');
             Reg2Addr = string(4, '0');
-            ExMemRegisterRDAddr = string(4, '0');
-            MemWbRegisterRDAddr = string(4, '0');
-            ExMemRegWrite = "0";
-            MemWbRegWrite = "0";
+
+            EX_MEM_RegisterRDAddr = string(4, '0');
+            MEM_WB_RegisterRDAddr = string(4, '0');
+            EX_MEM_RegWrite = "0";
+            MEM_WB_RegWrite = "0";
+            branch = '0';
         }
 
         void Reset()
         {
             Reg1Addr = string(4, '0');
             Reg2Addr = string(4, '0');
-            ExMemRegisterRDAddr = string(4, '0');
-            MemWbRegisterRDAddr = string(4, '0');
-            ExMemRegWrite = "0";
-            MemWbRegWrite = "0";
+            EX_MEM_RegisterRDAddr = string(4, '0');
+            MEM_WB_RegisterRDAddr = string(4, '0');
+            EX_MEM_RegWrite = "0";
+            MEM_WB_RegWrite = "0";
+            branch = '0';
         }
 
         void ConnectCtrlMUX3(string* connection)
@@ -1041,18 +1162,23 @@ class ALUForwardingUnit
 
         void Step()
         {
+            assert(CtrlMUX3 != nullptr);                    // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
+            assert(CtrlMUX4 != nullptr);                    // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
+            *CtrlMUX3 = "00";                               // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
+            *CtrlMUX4 = "00";                               // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
+            if (branch == '1') return;                      // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
             string ctrlmux3_out = "00";
             string ctrlmux4_out = "00";
             if 
             (
-                MemWbRegWrite[0] == '1' 
-                && MemWbRegisterRDAddr != "0000" 
+                MEM_WB_RegWrite[0] == '1' 
+                && MEM_WB_RegisterRDAddr != "0000" 
                 && !(   
-                        ExMemRegWrite[0] == '1' 
-                        && ExMemRegisterRDAddr != "0000" 
-                        && Reg1Addr == ExMemRegisterRDAddr
+                        EX_MEM_RegWrite[0] == '1' 
+                        && EX_MEM_RegisterRDAddr != "0000" 
+                        && Reg1Addr == EX_MEM_RegisterRDAddr
                     ) 
-                && Reg1Addr == MemWbRegisterRDAddr
+                && Reg1Addr == MEM_WB_RegisterRDAddr
             )
             {
                 ctrlmux3_out = "01";
@@ -1060,14 +1186,14 @@ class ALUForwardingUnit
 
             if 
             (
-                MemWbRegWrite[0] == '1' 
-                && MemWbRegisterRDAddr != "0000" 
+                MEM_WB_RegWrite[0] == '1' 
+                && MEM_WB_RegisterRDAddr != "0000" 
                 && !(   
-                        ExMemRegWrite[0] == '1' 
-                        && ExMemRegisterRDAddr != "0000" 
-                        && Reg2Addr == ExMemRegisterRDAddr
+                        EX_MEM_RegWrite[0] == '1' 
+                        && EX_MEM_RegisterRDAddr != "0000" 
+                        && Reg2Addr == EX_MEM_RegisterRDAddr
                     ) 
-                && Reg2Addr == MemWbRegisterRDAddr
+                && Reg2Addr == MEM_WB_RegisterRDAddr
             )
             {
                 ctrlmux4_out = "01";
@@ -1075,9 +1201,9 @@ class ALUForwardingUnit
 
             if 
             (
-                ExMemRegWrite[0] == '1' 
-                && ExMemRegisterRDAddr != "0000" 
-                && Reg1Addr == ExMemRegisterRDAddr
+                EX_MEM_RegWrite[0] == '1' 
+                && EX_MEM_RegisterRDAddr != "0000" 
+                && Reg1Addr == EX_MEM_RegisterRDAddr
             )
             {
                 ctrlmux3_out="10";
@@ -1085,9 +1211,9 @@ class ALUForwardingUnit
 
             if 
             (
-                ExMemRegWrite[0]=='1' 
-                && ExMemRegisterRDAddr!="0000" 
-                && Reg2Addr==ExMemRegisterRDAddr
+                EX_MEM_RegWrite[0]=='1' 
+                && EX_MEM_RegisterRDAddr!="0000" 
+                && Reg2Addr==EX_MEM_RegisterRDAddr
             )
             {
                 ctrlmux4_out="10";
@@ -1105,6 +1231,95 @@ class ALUForwardingUnit
 };
 
 class BranchForwardingUnit
+{
+    private:
+        char *BranchCMPMux1{};
+        char *BranchCMPMux2{};
+
+    public:
+        string IF_ID_RegisterRs1{};
+        string IF_ID_RegisterRs2{};
+
+        string EX_MEM_RegisterRDAddr{};
+        string MEM_WB_RegisterRDAddr{};
+
+        char EX_MEM_RegWrite{};
+        char Branch{};
+
+        BranchForwardingUnit() 
+        {
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRDAddr = string(5, '0');
+            EX_MEM_RegWrite = '0';
+            Branch = '0';
+        }
+
+        void Reset()
+        {
+            IF_ID_RegisterRs1 = string(5, '0');
+            IF_ID_RegisterRs2 = string(5, '0');
+            EX_MEM_RegisterRDAddr = string(5, '0');
+            EX_MEM_RegWrite = '0';
+            Branch = '0';
+        }
+
+        void ConnectBranchCMPMux1(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            BranchCMPMux1 = connection;
+        }
+
+        void ConnectBranchCMPMux2(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            BranchCMPMux2 = connection;
+        }
+
+        void Step()
+        {
+            *BranchCMPMux1 = '0';
+            *BranchCMPMux2 = '0';
+            if (Branch == '0') return;
+            assert(BranchCMPMux1 != nullptr); 
+            assert(BranchCMPMux2 != nullptr); 
+            assert(IF_ID_RegisterRs1.size() == 5); 
+            assert(IF_ID_RegisterRs2.size() == 5); 
+            assert(EX_MEM_RegisterRDAddr.size() == 5); 
+            assert(MEM_WB_RegisterRDAddr.size() == 5); 
+            char branch_cmp_mux1_out = '0';
+            char branch_cmp_mux2_out = '0';
+            if
+            (
+                EX_MEM_RegWrite == '1'
+                && EX_MEM_RegisterRDAddr == IF_ID_RegisterRs1
+            )
+            {
+                branch_cmp_mux1_out = '1';
+            }
+            else branch_cmp_mux1_out = '0';
+
+            if
+            (
+                EX_MEM_RegWrite == '1'
+                && EX_MEM_RegisterRDAddr == IF_ID_RegisterRs2
+            )
+            {
+                branch_cmp_mux2_out = '1';
+            }
+            else branch_cmp_mux2_out = '0';
+            *BranchCMPMux1 = branch_cmp_mux1_out;
+            *BranchCMPMux2 = branch_cmp_mux2_out;
+        }
+
+        ~BranchForwardingUnit()
+        {
+            BranchCMPMux1 = nullptr;
+            BranchCMPMux2 = nullptr;
+        }   
+};
+
+class BranchCmp         // MUJE SAMA NHI AYA KYA KARNA H
 {
     private:
 
