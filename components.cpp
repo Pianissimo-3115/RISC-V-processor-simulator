@@ -1,4 +1,11 @@
 #include<bits/stdc++.h>
+// #include<string>
+// #include<bitset>
+// #include<unordered_set>
+// #include<assert.h>
+// #include<exception>
+// #include<tuple>
+// #include<iostream>
 using namespace std;
 
 using ControlSignal = tuple<char,       char,       char,       char,       char,       char,       string,     char,   char>;
@@ -143,10 +150,80 @@ class MUX4x1
         }
 };
 
+
 class Register  // Arjun can write this in this style yourself (maine tera implementation iska padha nhi so idk kaise hoga)
 {
     private:
+        unordered_set<tuple<int, int, char*>> OutputPorts;
+        size_t Reg_size;
+    public:
+        string Data;
+        char FlushBit;
+        char WriteBit;
 
+    Register(size_t reg_size)
+    {
+        Reg_size = reg_size;
+        Data = string(Reg_size, '0');
+        FlushBit = '0'; 
+        WriteBit = '0'; 
+    }
+
+    void Reset()
+    {
+        Data = string(Reg_size, '0');
+        FlushBit = '0'; 
+        WriteBit = '0'; 
+    }
+
+    void ConnectOutput(unsigned start, unsigned end, char* connection)
+    {
+        if (start<0 || end<start || end>=Reg_size)
+        {
+            //Suitable error ( invalid_argument("Invalid register start and/or end values")?? )
+            return;
+        }
+        assert(connection != nullptr);
+        OutputPorts.insert( tuple(start, end, connection));
+    }
+
+    void Step()
+    {
+        if (FlushBit == '1')
+        {
+            //Data = string(Reg_size, '0');
+            for (auto port: OutputPorts)
+            {
+                char* out_pointer = get<2>(port);
+                int start = get<0>(port);
+                int end = get<1>(port);
+
+                for (int i = start; i <= end; i++)
+                {
+                    *(out_pointer + i - start) = '0'; //Strings mai ye cheez ka better tareeka ho then please do
+                }
+                
+            }
+            return;
+        }
+
+        if (WriteBit == '1')
+        {
+            for (auto port: OutputPorts)
+            {
+                char* out_pointer = get<2>(port);
+                int start = get<0>(port);
+                int end = get<1>(port);
+
+                for (int i = start; i <= end; i++)
+                {
+                    *(out_pointer + i - start) = Data[i]; //Strings mai ye cheez ka better tareeka ho then please do
+                }
+                
+            }
+        }
+        
+    }
 };
 
 class HazardDetectionUnitNoFwd
@@ -194,7 +271,7 @@ class HazardDetectionUnitNoFwd
         {
             for (auto port : OutputPorts)
             {
-                assert(port != nullptr); // Ensure port is not null
+                assert(port != nullptr); // Ensure port is not null //NOTE: Ye to already check ho gaya na insert karte time??
                 *port = '0';
             }
             if
