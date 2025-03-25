@@ -264,6 +264,7 @@ class HazardDetectionUnitNoFwd
             (
                 (
                     ID_EX_RegWrite == "1"
+                    && ID_EX_RegisterRd != "00000"
                     && 
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1 
@@ -273,6 +274,7 @@ class HazardDetectionUnitNoFwd
                 ||
                 (
                     EX_MEM_RegWrite == "1"
+                    && EX_MEM_RegWrite != "00000"
                     &&
                     (
                         EX_MEM_RegisterRd == IF_ID_RegisterRs1
@@ -349,6 +351,7 @@ class HazardDetectionUnit
             (
                 (
                     ID_EX_Memread == "1"            // R type instructions
+                    && ID_EX_RegisterRd != "00000"
                     && 
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1 
@@ -358,6 +361,7 @@ class HazardDetectionUnit
                 ||
                 (
                     EX_MEM_Memread == "1"
+                    && EX_MEM_RegisterRd != "00000"
                     &&
                     (
                         EX_MEM_RegisterRd == IF_ID_RegisterRs1
@@ -368,6 +372,7 @@ class HazardDetectionUnit
                 ||
                 (
                     ID_EX_RegWrite == "1"
+                    && ID_EX_RegisterRd != "00000"
                     &&
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1
@@ -1551,6 +1556,7 @@ class BranchForwardingUnit
             (
                 EX_MEM_RegWrite == "1"
                 && EX_MEM_MemRead == "0"
+                && EX_MEM_RegisterRDAddr != "00000"
                 && EX_MEM_RegisterRDAddr == IF_ID_RegisterRs1
             )
             {
@@ -1562,6 +1568,7 @@ class BranchForwardingUnit
             (
                 EX_MEM_RegWrite == "1"
                 && EX_MEM_MemRead == "0"
+                && EX_MEM_RegisterRDAddr != "00000"
                 && EX_MEM_RegisterRDAddr == IF_ID_RegisterRs2
             )
             {
@@ -2018,44 +2025,33 @@ class LeftShift
 //     output3 = string(32, '0');
 //     output = "0101";
 //     output2 = "000000";
-    
 //     MUX2x1 mux1 = MUX2x1(1);
 //     MUX2x1 mux2 = MUX2x1(2);
 //     MUX2x1 mux3 = MUX2x1(2);
 //     MUX4x1 mux4 = MUX4x1(4);
 //     Register reg = Register(174);
 //     ALUx32 alu = ALUx32();
-    
 //     mux1.Input1 = "0";
 //     mux1.Input2 = "1";
-    
 //     mux2.Input1 = "00";
 //     mux2.Input2 = "01";
-    
 //     mux3.Input1 = "10";
 //     mux3.Input2 = "11";
-    
 //     mux1.ConnectOutput(&mux2.InputSwitch);
 //     mux1.ConnectOutput(&mux3.InputSwitch);
-    
 //     mux2.ConnectOutput(&mux4.Input2);
 //     mux3.ConnectOutput(&mux4.Input2+2);
-    
 //     mux1.InputSwitch = '1';
 //     mux4.InputSwitch = "01";
-    
 //     mux4.ConnectOutput(&output);
 //     mux4.ConnectOutput(&reg.Data[13]);
-    
 //     reg.ConnectOutput(12,17,&output2);
 //     reg.Write = "1";
 //     reg.Flush = "0";
-
 //     reg.ConnectOutput(12, 43, alu.Input1);
 //     reg.ConnectOutput(0, 31, alu.Input2);
 //     alu.ConnectResult(&output3);
 //     alu.ALUControl = 1;
-
 //     mux1.Step();
 //     mux2.Step();
 // }
