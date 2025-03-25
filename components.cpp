@@ -22,6 +22,12 @@ unsigned bitsStringToUnsigned(string bits)
     return num;
 }
 
+int bitsStringToInt(string bits)
+{
+    int num = bitset<32>(bits).to_ulong();
+    return num;
+}
+
 class MUX2x1
 {
     private:
@@ -1319,10 +1325,103 @@ class BranchForwardingUnit
         }   
 };
 
-class BranchCmp         // MUJE SAMA NHI AYA KYA KARNA H
+class BranchCmp
 {
     private:
+        char* OutputPort;
+    public:
+        string Value1;
+        string Value2;
+        unsigned Func3;
+        char branch;
 
+        BranchCmp()
+        {
+            Value1 = string(32, '0');
+            Value2 = string(32, '0');
+            branch = '0';
+            Func3 = 0;
+        }
+
+        void Reset()
+        {
+            Value1 = string(32, '0');
+            Value2 = string(32, '0');
+            branch = '0';
+            Func3 = 0;
+        }
+
+        void ConnectOutput(char* connection)
+        {
+            assert(connection != nullptr); // Ensure connection is not null
+            OutputPort = connection;
+        }
+
+        void Step()
+        {
+            *OutputPort = '0';
+            if (branch == '0') return;
+            assert(Value1.size() == 32); // Ensure Value1 is 32 bits
+            assert(Value2.size() == 32); // Ensure Value2 is 32 bits
+            
+            switch (Func3)
+            {
+                case 0:         // BEQ
+                {
+                    if (Value1 == Value2)
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+                break;
+
+                case 1:         // BNE
+                {
+                    if (Value1 != Value2)
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+                break;
+
+                case 4:         // BLT
+                {
+                    if (bitsStringToInt(Value1) < bitsStringToInt(Value2))
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+
+                case 5:         // BGE
+                {
+                    if (bitsStringToInt(Value1) >= bitsStringToInt(Value2))
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+                
+                case 6:         // BLTU
+                {
+                    if (bitsStringToUnsigned(Value1) < bitsStringToUnsigned(Value2))
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+
+                case 7:         // BGEU
+                {
+                    if (bitsStringToUnsigned(Value1) >= bitsStringToUnsigned(Value2))
+                    {
+                        *OutputPort = '1';
+                    }
+                }
+
+            }
+        }
+        ~BranchCmp()
+        {
+            OutputPort = nullptr;
+        }
 };
 
 class DataMemory
@@ -1332,7 +1431,7 @@ class DataMemory
     public:
         unsigned Address;
         unsigned* WriteData;
-        int Func3;
+        unsigned Func3;
         unordered_map<unsigned, unsigned> Memory;
         char MemWrite;
         char MemRead;
