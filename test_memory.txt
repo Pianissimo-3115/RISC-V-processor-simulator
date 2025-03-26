@@ -1,0 +1,38 @@
+0:        080000ef        jal x1 128 <reset>
+4:        123412b7        lui x5 0x12341
+8:        23428293        addi x5 x5 564
+c:        00542023        sw x5 0 x8
+10:        00042303        lw x6 0 x8
+14:        00200193        addi x3 x0 2
+18:        04629e63        bne x5 x6 92 <fail>
+1c:        064000ef        jal x1 100 <reset>
+20:        b2e00293        addi x5 x0 -1234
+24:        00541023        sh x5 0 x8
+28:        00041303        lh x6 0 x8
+2c:        00045383        lhu x7 0 x8
+30:        00300193        addi x3 x0 3
+34:        04629063        bne x5 x6 64 <fail>
+38:        00010e37        lui x28 0x10
+3c:        b2ee0e13        addi x28 x28 -1234
+40:        03c39a63        bne x7 x28 52 <fail>
+44:        03c000ef        jal x1 60 <reset>
+48:        f8500293        addi x5 x0 -123
+4c:        00541023        sh x5 0 x8
+50:        00040303        lb x6 0 x8
+54:        00044383        lbu x7 0 x8
+58:        00400193        addi x3 x0 4
+5c:        00629c63        bne x5 x6 24 <fail>
+60:        08500e13        addi x28 x0 133
+64:        01c39863        bne x7 x28 16 <fail>
+68:        02a00513        addi x10 x0 42
+6c:        05d00893        addi x17 x0 93
+70:        00000073        ecall
+74:        00000513        addi x10 x0 0
+78:        05d00893        addi x17 x0 93
+7c:        00000013        addi x0 x0 0
+80:        00000293        addi x5 x0 0
+84:        00000313        addi x6 x0 0
+88:        00000393        addi x7 x0 0
+8c:        00000e13        addi x28 x0 0
+90:        00042023        sw x0 0 x8
+94:        00008067        jalr x0 x1 0

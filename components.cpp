@@ -1,4 +1,15 @@
 #include<bits/stdc++.h>
+#include<limits>
+// #include<string>
+// #include<bitset>
+// #include<unordered_set>
+// #include<set>
+// #include<unordered_map>
+// #include<assert.h>
+// #include<exception>
+// #include<tuple>
+// #include<iostream>
+
 using namespace std;
 
 string unsignedToBitsString(unsigned num) 
@@ -28,7 +39,7 @@ int bitsStringToInt(string bits)
 class MUX2x1
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input1;
         string Input2;
@@ -50,10 +61,10 @@ class MUX2x1
             InputSwitch = "0";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            // assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
@@ -64,11 +75,17 @@ class MUX2x1
                 assert(port != nullptr); // Ensure port is not null
                 if (InputSwitch == "0")
                 {
-                    *port = Input1;
+                    for (size_t i = 0; i < dataSizeBits; i++)
+                    {
+                        port[i] = Input1[i];
+                    }
                 }
                 else
                 {
-                    *port = Input2;
+                    for (size_t i = 0; i < dataSizeBits; i++)
+                    {
+                        port[i] = Input2[i];
+                    }
                 }
             }
         }
@@ -83,7 +100,7 @@ class MUX2x1
 class MUX4x1 
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input1;
         string Input2;
@@ -111,16 +128,16 @@ class MUX4x1
             InputSwitch = "00";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            // assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
         void Step()
         {
-            assert(InputSwitch.size() == 2); // Ensure InputSwitch is 2 bits
+            // assert(InputSwitch.size() == 2); // Ensure InputSwitch is 2 bits
             string chosen;
             if (InputSwitch == "00") chosen = Input1;
             else if (InputSwitch == "01") chosen = Input2;
@@ -130,7 +147,10 @@ class MUX4x1
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = chosen;
+                for (size_t i = 0; i < dataSizeBits; i++)
+                {
+                    port[i] = chosen[i];
+                }
             }
         }
 
@@ -143,34 +163,33 @@ class MUX4x1
 class Register
 {
     private:
-        set<tuple<int, int, string*>> OutputPorts;
+        set<tuple<int, int, char*>> OutputPorts;
         size_t Reg_size;
     public:
         string Data;
         string FlushBit;
-        string WriteBit;
+        string StallBit;
 
         Register(size_t reg_size)
         {
             Reg_size = reg_size;
             Data = string(Reg_size, '0');
             FlushBit = "0"; 
-            WriteBit = "0"; 
+            StallBit = "0"; 
         }
 
     void Reset()
     {
         Data = string(Reg_size, '0');
         FlushBit = "0"; 
-        WriteBit = "0"; 
+        StallBit = "0"; 
     }
 
-    void ConnectOutput(unsigned start, unsigned end, string* connection)
+    void ConnectOutput(unsigned start, unsigned end, char* connection)
     {
         if (start<0 || end<start || end>=Reg_size)
         {
-            //Suitable error ( invalid_argument("Invalid register start and/or end values")?? )
-            return;
+            throw invalid_argument("Invalid register start and/or end values");
         }
         assert(connection != nullptr);
         OutputPorts.insert( tuple(start, end, connection));
@@ -178,35 +197,35 @@ class Register
 
     void Step()
     {
-        if (FlushBit == "1")
+        if (FlushBit == "1" && StallBit == "0")
         {
             //Data = string(Reg_size, '0');
             for (auto port: OutputPorts)
             {
-                string* out_pointer = get<2>(port);
+                char* out_pointer = get<2>(port);
                 int start = get<0>(port);
                 int end = get<1>(port);
 
                 for (int i = 0; i <= end-start; i++)
                 {
-                    (*out_pointer)[i]= '0';
+                    out_pointer[i]= '0';
                 }
                 
             }
             return;
         }
 
-        if (WriteBit == "1")
+        if (StallBit == "0")
         {
             for (auto port: OutputPorts)
             {
-                string* out_pointer = get<2>(port);
+                char* out_pointer = get<2>(port);
                 int start = get<0>(port);
                 int end = get<1>(port);
 
                 for (int i = start; i <= end; i++)
                 {
-                    (*out_pointer)[i-start] = Data[i];
+                    out_pointer[i-start] = Data[i];
                 }
                 
             }
@@ -218,7 +237,7 @@ class Register
 class HazardDetectionUnitNoFwd
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string ID_EX_RegWrite;
         string EX_MEM_RegWrite;
@@ -247,7 +266,7 @@ class HazardDetectionUnitNoFwd
             EX_MEM_RegisterRd = string(5, '0');
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPorts.insert(connection);
@@ -258,7 +277,7 @@ class HazardDetectionUnitNoFwd
             for (auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = "0";
+                port[0] = '0';
             }
             if
             (
@@ -284,7 +303,7 @@ class HazardDetectionUnitNoFwd
                 for(auto port : OutputPorts)
                 {
                     assert(port != nullptr); // Ensure port is not null
-                    *port = "1";
+                    port[0] = '1';
                 }
             }
         }
@@ -298,7 +317,7 @@ class HazardDetectionUnitNoFwd
 class HazardDetectionUnit
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string ID_EX_Memread;
         string EX_MEM_Memread;
@@ -317,6 +336,7 @@ class HazardDetectionUnit
             IF_ID_RegisterRs1 = string(5, '0');
             IF_ID_RegisterRs2 = string(5, '0');
             EX_MEM_RegisterRd = string(5, '0');
+            ID_EX_RegWrite = "0";
             opcode = "0000000";
         }
 
@@ -328,10 +348,11 @@ class HazardDetectionUnit
             IF_ID_RegisterRs1 = string(5, '0');
             IF_ID_RegisterRs2 = string(5, '0');
             EX_MEM_RegisterRd = string(5, '0');
+            ID_EX_RegWrite = "0";
             opcode = "0000000";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPorts.insert(connection);
@@ -343,7 +364,7 @@ class HazardDetectionUnit
             for (auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = "0";
+                port[0] = '0';
             }
             if
             (
@@ -380,7 +401,7 @@ class HazardDetectionUnit
                 for(auto port : OutputPorts)
                 {
                     assert(port != nullptr); // Ensure port is not null
-                    *port = "1";
+                    port[0] = '1';
                 }
             }
         }
@@ -395,8 +416,8 @@ class HazardDetectionUnit
 class ALUx32
 {
     private:
-        unordered_set<string*> OutputPorts;
-        unordered_set<string*> ZeroPorts;
+        unordered_set<char*> OutputPorts;
+        // unordered_set<char*> ZeroPorts;
     public:
         string Input1;
         string Input2;
@@ -416,26 +437,39 @@ class ALUx32
             ALUControl = "00000";
         }
 
-        void ConnectResult(string* connection)
+        void ConnectResult(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
-        void ConnectZero(string* connection)
-        {
-            assert(connection != nullptr); // Ensure connection is not null
-            ZeroPorts.insert(connection);
-        }
+        // void ConnectZero(char* connection)
+        // {
+        //     assert(connection != nullptr); // Ensure connection is not null
+        //     ZeroPorts.insert(connection);
+        // }
 
         void Step()
         {
-
+            string result;
+            if (ALUControl == "xxxxx")
+            {
+                result = unsignedToBitsString(UINT_MAX);
+                for(auto port : OutputPorts)
+                {
+                    assert(port != nullptr); // Ensure port is not null
+                    for (size_t i = 0; i < 32; i++)
+                    {
+                        port[i] = result[i];
+                    }
+                }
+                return;
+            }
+            
             unsigned inp1 = bitsStringToUnsigned(Input1);
             unsigned inp2 = bitsStringToUnsigned(Input2);
             unsigned ALUC = bitsStringToUnsigned(ALUControl);
-            string result;
             string zero;
             switch(ALUC)
             {
@@ -581,7 +615,7 @@ class ALUx32
                     zero = (res == 0) ? "1" : "0";
                     break;
                 }
-                case INT_MAX:
+                case UINT_MAX:
                     result = string(32,'x');
                 default:
                 {
@@ -593,29 +627,34 @@ class ALUx32
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = result[i];
+                }
             }
-            for(auto port : ZeroPorts)
-            {
-                assert(port != nullptr); // Ensure port is not null
-                *port = zero;
-            }
+            // for(auto port : ZeroPorts)
+            // {
+            //     assert(port != nullptr); // Ensure port is not null
+
+                // port[i] = zero[i];
+
+            // }
         }
     ~ALUx32()
     {
         OutputPorts.clear();
-        ZeroPorts.clear();
+        // ZeroPorts.clear();
     }
 };
 
 class RegisterMemx32 
 {
     private:
-        unordered_set<string*> Data1OutputPorts;
-        unordered_set<string*> Data2OutputPorts;
+        unordered_set<char*> Data1OutputPorts;
+        unordered_set<char*> Data2OutputPorts;
+        
+        public:
         string Registers[32];
-    
-    public:
         string ReadReg1;
         string ReadReg2;
         string WriteReg;
@@ -631,6 +670,10 @@ class RegisterMemx32
             WriteEnable = '0';
             for(int i = 0; i < 32; i++)
             {
+                if (i == 2)
+                {
+                    Registers[i] = string(32, '1');
+                }
                 Registers[i] = string(32, '0');
             }
         }
@@ -648,43 +691,50 @@ class RegisterMemx32
             }
         }
 
-        void ConnectData1Output(string* connection)
+        void ConnectData1Output(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             Data1OutputPorts.insert(connection);
         }
 
-        void ConnectData2Output(string* connection)
+        void ConnectData2Output(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             Data2OutputPorts.insert(connection);
         }
 
         void StepRead()
         {
-            assert(ReadReg1.size() == 5); // Ensure ReadReg1 is 5 bits
-            assert(ReadReg2.size() == 5); // Ensure ReadReg2 is 5 bits
+            // assert(ReadReg1.size() == 5); // Ensure ReadReg1 is 5 bits
+            // assert(ReadReg2.size() == 5); // Ensure ReadReg2 is 5 bits
             unsigned address1 = bitsStringToUnsigned(ReadReg1);
             unsigned address2 = bitsStringToUnsigned(ReadReg2);
             for(auto port : Data1OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = Registers[address1];
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = Registers[address1][i];
+                }
             }
             for(auto port : Data2OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = Registers[address2];
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = Registers[address2][i];
+                }
             }
         }
         
         void StepWrite()
         {
             if(WriteEnable == "0") return;
-            assert(WriteReg.size() == 5); // Ensure WriteReg is 5 bits
+            // assert(WriteReg.size() == 5); // Ensure WriteReg is 5 bits
             unsigned address = bitsStringToUnsigned(WriteReg);
+            if(address == 0) return;        // HARD CODE x0 to 0
             Registers[address] = WriteData;
         }
         ~RegisterMemx32()
@@ -697,28 +747,30 @@ class RegisterMemx32
 class InstructionMemx32 
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
         vector<uint32_t> Instructions;
         unsigned InstrCount = 0;
 
     public:
         string PC;
-        InstructionMemx32(unsigned size) 
+        InstructionMemx32() 
         {
-            this->Instructions=vector<uint32_t>(size, 0);
-            this->InstrCount = size;
+            this->Instructions=vector<uint32_t>(0);
+            this->InstrCount = 0;
+            PC = string(32, '0');
         }
 
         void Reset()
         {
             this->Instructions.clear();
             this->InstrCount = 0;
+            PC = string(32, '0');
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
@@ -732,12 +784,31 @@ class InstructionMemx32
         {
             unsigned newpc = bitsStringToUnsigned(PC);
             assert(newpc%4 == 0); // Ensure newpc is a multiple of 4
-            assert(newpc/4 < InstrCount); // Ensure newpc is within range
+            // assert(newpc/4 < InstrCount); // Ensure newpc is within range
+            if (newpc/4 >= InstrCount)
+            {
+                for(auto port : OutputPorts)
+                {
+                    assert(port != nullptr); // Ensure port is not null
+                    for (size_t i = 0; i < 32; i++)
+                    {
+                        port[i] = '0';
+                    }
+                    // *port = curr_instruction;
+                }
+                return;
+            }
+            
             string curr_instruction = unsignedToBitsString(Instructions[newpc/4]);
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = curr_instruction;
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = curr_instruction[i];
+                }
+                
+                // *port = curr_instruction;
             }
         }
 
@@ -750,7 +821,7 @@ class InstructionMemx32
 class ImmediateGen 
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Instruction;
 
@@ -764,10 +835,10 @@ class ImmediateGen
             Instruction = string(32, '0');
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
@@ -808,23 +879,23 @@ class ImmediateGen
                 {
                     immediate[i] = Instruction[i-6];
                 }
-                immediate[31] = Instruction[24];
+                immediate[31] = Instruction[25];
             }
-            else if (Instruction.substr(25, 7) == "1100011") //SB type
+            else if (Instruction.substr(25, 7) == "1100011") //SB type Hopefully ab sahi hai
             {
                 for (int i = 0; i < 20; i++)
                 {
                     immediate[i] = Instruction[0];
                 }
-                immediate[20] = Instruction[24];
                 for (int i = 21; i < 27; i++)
                 {
                     immediate[i] = Instruction[i-20];
                 }
                 for (int i = 27; i < 31; i++)
                 {
-                    immediate[i] = Instruction[i-6];
+                    immediate[i] = Instruction[i-7];
                 }
+                immediate[20] = Instruction[24];
                 immediate[31] = '0';
             }
             else if (Instruction.substr(25, 7) == "0010111" || Instruction.substr(25, 7) == "0110111") //Utype
@@ -858,7 +929,10 @@ class ImmediateGen
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = immediate;
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = immediate[i];
+                }
             }
         }
 
@@ -871,23 +945,23 @@ class ImmediateGen
 class ControlUnit           
 {
     private:
-        string* IF_Flush;
+        char* IF_Flush;
 
-        string* RegWrite;
-        string* MemToReg;
+        char* RegWrite;
+        char* MemToReg;
 
-        string* MemRead;
-        string* MemWrite;
+        char* MemRead;
+        char* MemWrite;
 
-        string* ALUSrc1;      // ALUSrc1 = "00" => Register, "01" => PC, "10" => 0
-        string* ALUSrc2;      // ALUSrc2 = "00" => Register, "01" => Immediate, "10" => 4
-        string* ALUOp;
+        char* ALUSrc1;      // ALUSrc1 = "00" => Register, "01" => PC, "10" => 0
+        char* ALUSrc2;      // ALUSrc2 = "00" => Register, "01" => Immediate, "10" => 4
+        char* ALUOp;
 
-        string* IsBranch;
+        unordered_set<char*> IsBranch;
 
-        string* IsJalr;
+        char* IsJalr;
 
-        string* Jump; 
+        char* Jump; 
     public:
         string opcode;
         string PC;
@@ -903,56 +977,56 @@ class ControlUnit
             PC = string(32, '0');
         }
 
-        void ConnectIFFlush(string* connection)
+        void ConnectIFFlush(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             IF_Flush = connection;
         }
 
-        void ConnectWriteBack(string* RegWriteConnection, string* MemToRegConnection)
+        void ConnectWriteBack(char* RegWriteConnection, char* MemToRegConnection)
         {
-            assert(RegWrite != nullptr); // Ensure connection is not null
-            assert(MemToReg != nullptr); // Ensure connection is not null
+            assert(RegWriteConnection != nullptr); // Ensure connection is not null
+            assert(MemToRegConnection != nullptr); // Ensure connection is not null
             RegWrite = RegWriteConnection;
             MemToReg = MemToRegConnection;
         }
 
-        void ConnectMemory(string* MemReadConnection, string* MemWriteConnection)
+        void ConnectMemory(char* MemReadConnection, char* MemWriteConnection)
         {
-            assert(MemRead != nullptr); // Ensure connection is not null
-            assert(MemWrite != nullptr); // Ensure connection is not null
+            assert(MemReadConnection != nullptr); // Ensure connection is not null
+            assert(MemWriteConnection != nullptr); // Ensure connection is not null
             MemRead = MemReadConnection;
             MemWrite = MemWriteConnection;
         }
 
 
 
-        void ConnectALU(string* ALUSrc1Connection, string* ALUSrc2Connection, string* ALUOpConnection)
+        void ConnectALU(char* ALUSrc1Connection, char* ALUSrc2Connection, char* ALUOpConnection)
         {
-            assert(ALUSrc1 != nullptr); // Ensure connection is not null
-            assert(ALUSrc2 != nullptr); // Ensure connection is not null
-            assert(ALUOp != nullptr); // Ensure connection is not null
-            assert(ALUOp->size() == 2); // Ensure ALUOp is 2 bits
-            assert(ALUSrc1->size() == 2);
-            assert(ALUSrc2->size() == 2); // Ensure ALUSrc2 is 2 bits
+            assert(ALUSrc1Connection != nullptr); // Ensure connection is not null
+            assert(ALUSrc2Connection != nullptr); // Ensure connection is not null
+            assert(ALUOpConnection != nullptr); // Ensure connection is not null
+            // assert(ALUOp->size() == 2); // Ensure ALUOp is 2 bits
+            // assert(ALUSrc1->size() == 2);
+            // assert(ALUSrc2->size() == 2); // Ensure ALUSrc2 is 2 bits
             ALUSrc1 = ALUSrc1Connection;
             ALUSrc2 = ALUSrc2Connection;
             ALUOp = ALUOpConnection;
         }
 
-        void ConnectIsBranch(string* connection)
+        void ConnectIsBranch(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            IsBranch = connection;
+            IsBranch.insert(connection);
         }
 
-        void ConnectJalr(string* connection)
+        void ConnectJalr(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             IsJalr = connection;
         }
 
-        void ConnectJump(string* connection)
+        void ConnectJump(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             Jump = connection;
@@ -961,153 +1035,205 @@ class ControlUnit
         void Step()
         {
             unsigned OPCODE = bitsStringToUnsigned(opcode);
+            char Branch = '0';
             switch(OPCODE)
             {
                 case 0b0110011:         // R-type
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "00";
-                    *ALUSrc2 = "00";
-                    *MemToReg = "0";
-                    *RegWrite = "1";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "10";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '0';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '1';
+                    ALUOp[1] = '0';
                 }
                 break;
 
                 case 0b0010011:         // I-type
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "00";
-                    *ALUSrc2 = "01";
-                    *MemToReg = "0";
-                    *RegWrite = "1";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "11";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '1';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '1';
+                    ALUOp[1] = '1';
                 }
                 break;
 
                 case 0b0000011:         // Load
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "00";
-                    *ALUSrc2 = "01";
-                    *MemToReg = "1";
-                    *RegWrite = "1";
-                    *MemRead = "1";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "00";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '1';
+                    *MemToReg = '1';
+                    *RegWrite = '1';
+                    *MemRead = '1';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
                 break;
 
                 case 0b0100011:         // Store
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "00";
-                    *ALUSrc2 = "01";
-                    *MemToReg = "0";
-                    *RegWrite = "0";
-                    *MemRead = "0";
-                    *MemWrite = "1";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "00";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '1';
+                    *MemToReg = '0';
+                    *RegWrite = '0';
+                    *MemRead = '0';
+                    *MemWrite = '1';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
                 break;
 
                 case 0b1100111:         // JALR
                 {
-                    *IF_Flush = "1";
-                    *ALUSrc1 = "01";
-                    *ALUSrc2 = "10";
-                    *MemToReg = "0";
-                    *RegWrite = "1";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "1";
-                    *Jump = "1";
-                    *ALUOp = "00";
+                    *IF_Flush = '1';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '1';
+                    ALUSrc2[0] = '1';
+                    ALUSrc2[1] = '0';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '1';
+                    *Jump = '1';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
                 break;
 
                 case 0b1100011:         // Branch
                 {
-                    *IF_Flush = "0";    // Always predict that branch won't be taken
-                    *ALUSrc1 = "00";
-                    *ALUSrc2 = "00";
-                    *MemToReg = "0";
-                    *RegWrite = "0";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "1";
-                    *IsJalr = "0";
-                    *Jump = "1";
-                    *ALUOp = "xx";
+                    *IF_Flush = '0';    // Always predict that branch won't be taken
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '0';
+                    *MemToReg = '0';
+                    *RegWrite = '0';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '1';
+                    *IsJalr = '0';
+                    *Jump = '1';
+                    ALUOp[0] = 'x';
+                    ALUOp[1] = 'x';
                 }
                 break;
 
                 case 0b0110111:         // LUI
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "10";
-                    *ALUSrc2 = "01";
-                    *MemToReg = "0";
-                    *RegWrite = "1";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "00";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '1';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '1';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
                 break;
                 case 0b0010111:         // AUIPC
                 {
-                    *IF_Flush = "0";
-                    *ALUSrc1 = "01";
-                    *ALUSrc2 = "01";
-                    *MemToReg = "0";
-                    *RegWrite = "1";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "0";
-                    *ALUOp = "00";
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '1';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '1';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
                 break;
 
                 case 0b1101111:         // JAL
                 {
-                    *IF_Flush = "1";
-                    *ALUSrc1 = "01";
-                    *ALUSrc2 = "10";
-                    *MemToReg = "0";
-                    *RegWrite = "0";
-                    *MemRead = "0";
-                    *MemWrite = "0";
-                    *IsBranch = "0";
-                    *IsJalr = "0";
-                    *Jump = "1";
-                    *ALUOp = "00";
+                    *IF_Flush = '1';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '1';
+                    ALUSrc2[0] = '1';
+                    ALUSrc2[1] = '0';
+                    *MemToReg = '0';
+                    *RegWrite = '1';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '1';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
                 }
+                break;
+                case 0b0000000: // No op
+                {
+                    *IF_Flush = '0';
+                    ALUSrc1[0] = '0';
+                    ALUSrc1[1] = '0';
+                    ALUSrc2[0] = '0';
+                    ALUSrc2[1] = '0';
+                    *MemToReg = '0';
+                    *RegWrite = '0';
+                    *MemRead = '0';
+                    *MemWrite = '0';
+                    Branch = '0';
+                    *IsJalr = '0';
+                    *Jump = '0';
+                    ALUOp[0] = '0';
+                    ALUOp[1] = '0';
+                }
+                break;
                 default:
                 {
+                    cout<<endl<<";sldfjas;lkfjs"<<endl<<opcode<<endl<<endl<<endl;
                     throw invalid_argument("Invalid opcode value");
                 }
+            }
+            for (auto port : IsBranch)
+            {
+                *port = Branch;
             }
         }
 };
@@ -1115,7 +1241,7 @@ class ControlUnit
 class ALUControlUnit
 {
     private:
-        string* OutputPort;
+        char* OutputPort;
 
     public:
         string ALUOp;
@@ -1136,7 +1262,7 @@ class ALUControlUnit
             ALUOp = "00";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPort = connection;
@@ -1157,13 +1283,13 @@ class ALUControlUnit
                         {
                             result = 2;     // ADD
                         }
-                        else if (FUNC7 == 0x20)
-                        {
-                            result = 6;     // SUB
-                        }
                         else if (FUNC7 == 0x01)
                         {
                             result = 8;     // MUL
+                        }
+                        else if (FUNC7 == 0x20)
+                        {
+                            result = 6;     // SUB
                         }
                         else 
                         {
@@ -1172,7 +1298,11 @@ class ALUControlUnit
                     }
                     else if (FUNC3 == 1)
                     {
-                        if (FUNC7 == 1)
+                        if (FUNC7 == 0x00)
+                        {
+                            result = 13;    // sll
+                        }
+                        else if (FUNC7 == 0x01)
                         {
                             result = 9;     // MULH
                         }
@@ -1181,8 +1311,23 @@ class ALUControlUnit
                             throw invalid_argument("Invalid FUNC7 value");
                         }
                     }
+                    else if (FUNC3 == 2)
+                    {
+                        if (FUNC7 == 0x00)
+                        {
+                            result = 4;     // slt
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid FUNC7 value");
+                        }
+                    }
                     else if (FUNC3 == 3)
                     {
+                        if (FUNC7 == 0x00)
+                        {
+                            result = 5;     // sltu
+                        }
                         if (FUNC7 == 0x01)
                         {
                             result = 11;    // MULHU
@@ -1209,10 +1354,23 @@ class ALUControlUnit
                     }
                     else if (FUNC3 == 5)
                     {
-                        if (FUNC7 == 0x01)
+                        if (FUNC7 == 0x00)
+                        {
+                            result = 14;    // srl
+                        }
+                        else if (FUNC7 == 0x01)
                         {
                             result = 25;    // DIVU
                         }
+                        else if (FUNC7 == 0x20)
+                        {
+                            result = 15;    // sra
+                        }
+                        else 
+                        {
+                            throw invalid_argument("Invalid FUNC7 value");
+                        }
+                        
                     }
                     else if (FUNC3 == 6)
                     {
@@ -1244,54 +1402,7 @@ class ALUControlUnit
                             throw invalid_argument("Invalid FUNC7 value");
                         }
                     }
-                    else if (FUNC3 == 0x1)
-                    {
-                        if (FUNC7 == 0x00)
-                        {
-                            result = 13;    // sll
-                        }
-                        else 
-                        {
-                            throw invalid_argument("Invalid FUNC7 value");
-                        }
-                    }
-                    else if (FUNC3 == 0x5)
-                    {
-                        if (FUNC7 == 0x00)
-                        {
-                            result = 14;    // srl
-                        }
-                        else if (FUNC7 == 0x20)
-                        {
-                            result = 15;    // sra
-                        }
-                        else 
-                        {
-                            throw invalid_argument("Invalid FUNC7 value");
-                        }
-                    }
-                    else if (FUNC3 == 0x2)
-                    {
-                        if (FUNC7 == 0x00)
-                        {
-                            result = 4;     // slt
-                        }
-                        else 
-                        {
-                            throw invalid_argument("Invalid FUNC7 value");
-                        }
-                    }
-                    else if (FUNC3 == 0x3)
-                    {
-                        if (FUNC7 == 0x00)
-                        {
-                            result = 5;     // sltu
-                        }
-                        else 
-                        {
-                            throw invalid_argument("Invalid FUNC7 value");
-                        }
-                    }
+                    
                 }
                 
                 else if (ALUOp == "11")    // ARITHMETIC IMMEDIATE OPERATION
@@ -1351,13 +1462,27 @@ class ALUControlUnit
                 }
                 else if(ALUOp == "xx")
                 {
-                    result = INT_MAX;
+                    result = UINT_MAX;
                 }
                 else
                 {
-                    throw invalid_argument("Invalid opcode value");
+                    throw invalid_argument("Invalid opcode value in ALUCtrlUnit");
                 }
-            *OutputPort = unsignedToBitsString(result);
+            string res_string = unsignedToBitsString(result).substr(32-5);
+
+            if (result == UINT_MAX)
+            {
+                for (size_t i = 0; i < 5; i++)
+                {
+                    OutputPort[i] = 'x';
+                }   
+                return;
+            }
+
+            for (size_t i = 0; i < 5; i++)
+            {
+                OutputPort[i] = res_string[i];
+            }
         }
 
         ~ALUControlUnit()
@@ -1369,8 +1494,8 @@ class ALUControlUnit
 class ALUForwardingUnit
 {
     private:
-        string* CtrlMUX3{};
-        string* CtrlMUX4{};
+        char* CtrlMUX3{};
+        char* CtrlMUX4{};
 
     public:
         string Reg1Addr{};
@@ -1384,11 +1509,11 @@ class ALUForwardingUnit
 
         ALUForwardingUnit() 
         {
-            Reg1Addr = string(4, '0');
-            Reg2Addr = string(4, '0');
+            Reg1Addr = string(5, '0');
+            Reg2Addr = string(5, '0');
 
-            EX_MEM_RegisterRDAddr = string(4, '0');
-            MEM_WB_RegisterRDAddr = string(4, '0');
+            EX_MEM_RegisterRDAddr = string(5, '0');
+            MEM_WB_RegisterRDAddr = string(5, '0');
             EX_MEM_RegWrite = "0";
             MEM_WB_RegWrite = "0";
             branch = "0";
@@ -1396,22 +1521,22 @@ class ALUForwardingUnit
 
         void Reset()
         {
-            Reg1Addr = string(4, '0');
-            Reg2Addr = string(4, '0');
-            EX_MEM_RegisterRDAddr = string(4, '0');
-            MEM_WB_RegisterRDAddr = string(4, '0');
+            Reg1Addr = string(5, '0');
+            Reg2Addr = string(5, '0');
+            EX_MEM_RegisterRDAddr = string(5, '0');
+            MEM_WB_RegisterRDAddr = string(5, '0');
             EX_MEM_RegWrite = "0";
             MEM_WB_RegWrite = "0";
             branch = "0";
         }
 
-        void ConnectCtrlMUX3(string* connection)
+        void ConnectCtrlMUX3(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             CtrlMUX3 = connection;
         }
 
-        void ConnectCtrlMUX4(string* connection)
+        void ConnectCtrlMUX4(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             CtrlMUX4 = connection;
@@ -1421,18 +1546,20 @@ class ALUForwardingUnit
         {
             assert(CtrlMUX3 != nullptr);                    // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
             assert(CtrlMUX4 != nullptr);                    // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
-            *CtrlMUX3 = "00";                               // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
-            *CtrlMUX4 = "00";                               // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
+            CtrlMUX3[0] = '0';
+            CtrlMUX3[1] = '0';                               // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
+            CtrlMUX4[0] = '0';
+            CtrlMUX4[1] = '0';                                 // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////        
             if (branch == "1") return;                      // ARJUN CONFIRM THIS////////////////////////////////////////////////////////////
             string ctrlmux3_out = "00";
             string ctrlmux4_out = "00";
             if 
             (
                 MEM_WB_RegWrite[0] == '1' 
-                && MEM_WB_RegisterRDAddr != "0000" 
+                && MEM_WB_RegisterRDAddr != "00000" 
                 && !(   
                         EX_MEM_RegWrite[0] == '1' 
-                        && EX_MEM_RegisterRDAddr != "0000" 
+                        && EX_MEM_RegisterRDAddr != "00000" 
                         && Reg1Addr == EX_MEM_RegisterRDAddr
                     ) 
                 && Reg1Addr == MEM_WB_RegisterRDAddr
@@ -1444,10 +1571,10 @@ class ALUForwardingUnit
             if 
             (
                 MEM_WB_RegWrite[0] == '1' 
-                && MEM_WB_RegisterRDAddr != "0000" 
+                && MEM_WB_RegisterRDAddr != "00000" 
                 && !(   
                         EX_MEM_RegWrite[0] == '1' 
-                        && EX_MEM_RegisterRDAddr != "0000" 
+                        && EX_MEM_RegisterRDAddr != "00000" 
                         && Reg2Addr == EX_MEM_RegisterRDAddr
                     ) 
                 && Reg2Addr == MEM_WB_RegisterRDAddr
@@ -1459,7 +1586,7 @@ class ALUForwardingUnit
             if 
             (
                 EX_MEM_RegWrite[0] == '1' 
-                && EX_MEM_RegisterRDAddr != "0000" 
+                && EX_MEM_RegisterRDAddr != "00000" 
                 && Reg1Addr == EX_MEM_RegisterRDAddr
             )
             {
@@ -1469,15 +1596,17 @@ class ALUForwardingUnit
             if 
             (
                 EX_MEM_RegWrite[0]=='1' 
-                && EX_MEM_RegisterRDAddr!="0000" 
+                && EX_MEM_RegisterRDAddr!="00000" 
                 && Reg2Addr==EX_MEM_RegisterRDAddr
             )
             {
                 ctrlmux4_out="10";
             }
             
-            *CtrlMUX3 = ctrlmux3_out;
-            *CtrlMUX4 = ctrlmux4_out;
+            CtrlMUX3[0] = ctrlmux3_out[0];
+            CtrlMUX3[1] = ctrlmux3_out[1]; 
+            CtrlMUX4[0] = ctrlmux4_out[0];
+            CtrlMUX4[1] = ctrlmux4_out[1]; 
         }
 
         ~ALUForwardingUnit()
@@ -1490,8 +1619,8 @@ class ALUForwardingUnit
 class BranchForwardingUnit
 {
     private:
-        string *BranchCMPMux1;
-        string *BranchCMPMux2;
+        char* BranchCMPMux1;
+        char* BranchCMPMux2;
 
     public:
         string IF_ID_RegisterRs1;
@@ -1509,7 +1638,9 @@ class BranchForwardingUnit
             IF_ID_RegisterRs1 = string(5, '0');
             IF_ID_RegisterRs2 = string(5, '0');
             EX_MEM_RegisterRDAddr = string(5, '0');
+            MEM_WB_RegisterRDAddr = string(5, '0');
             EX_MEM_RegWrite = "0";
+            EX_MEM_MemRead = "0";
             Branch = "0";
         }
 
@@ -1522,13 +1653,13 @@ class BranchForwardingUnit
             Branch = "0";
         }
 
-        void ConnectBranchCMPMux1(string* connection)
+        void ConnectBranchCMPMux1(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             BranchCMPMux1 = connection;
         }
 
-        void ConnectBranchCMPMux2(string* connection)
+        void ConnectBranchCMPMux2(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             BranchCMPMux2 = connection;
@@ -1536,15 +1667,15 @@ class BranchForwardingUnit
 
         void Step()
         {
-            *BranchCMPMux1 = "0";
-            *BranchCMPMux2 = "0";
+            *BranchCMPMux1 = '0';
+            *BranchCMPMux2 = '0';
             if (Branch == "0") return;
             assert(BranchCMPMux1 != nullptr); 
             assert(BranchCMPMux2 != nullptr); 
-            assert(IF_ID_RegisterRs1.size() == 5); 
-            assert(IF_ID_RegisterRs2.size() == 5); 
-            assert(EX_MEM_RegisterRDAddr.size() == 5); 
-            assert(MEM_WB_RegisterRDAddr.size() == 5); 
+            // assert(IF_ID_RegisterRs1.size() == 5); 
+            // assert(IF_ID_RegisterRs2.size() == 5); 
+            // assert(EX_MEM_RegisterRDAddr.size() == 5); 
+            // assert(MEM_WB_RegisterRDAddr.size() == 5); 
             string branch_cmp_mux1_out = "0";
             string branch_cmp_mux2_out = "0";
             if
@@ -1568,8 +1699,8 @@ class BranchForwardingUnit
                 branch_cmp_mux2_out = "1";
             }
             else branch_cmp_mux2_out = "0";
-            *BranchCMPMux1 = branch_cmp_mux1_out;
-            *BranchCMPMux2 = branch_cmp_mux2_out;
+            *BranchCMPMux1 = branch_cmp_mux1_out[0];
+            *BranchCMPMux2 = branch_cmp_mux2_out[0];
         }
 
         ~BranchForwardingUnit()
@@ -1582,7 +1713,7 @@ class BranchForwardingUnit
 class BranchCmp
 {
     private:
-        string* OutputPort;
+        char* OutputPort;
     public:
         string Value1;
         string Value2;
@@ -1605,7 +1736,7 @@ class BranchCmp
             Func3 = "000";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPort = connection;
@@ -1613,11 +1744,11 @@ class BranchCmp
 
         void Step()
         {
-            *OutputPort = "1";
+            *OutputPort = '1';
             if (branch == "0") return;
             unsigned FUNC3 = bitsStringToUnsigned(Func3);
-            assert(Value1.size() == 32); // Ensure Value1 is 32 bits
-            assert(Value2.size() == 32); // Ensure Value2 is 32 bits
+            // assert(Value1.size() == 32); // Ensure Value1 is 32 bits
+            // assert(Value2.size() == 32); // Ensure Value2 is 32 bits
             
             switch (FUNC3)
             {
@@ -1625,8 +1756,9 @@ class BranchCmp
                 {
                     if (Value1 == Value2)
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
                 break;
 
@@ -1634,8 +1766,9 @@ class BranchCmp
                 {
                     if (Value1 != Value2)
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
                 break;
 
@@ -1643,34 +1776,38 @@ class BranchCmp
                 {
                     if (bitsStringToInt(Value1) < bitsStringToInt(Value2))
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
-
+                break;
                 case 5:         // BGE
                 {
                     if (bitsStringToInt(Value1) >= bitsStringToInt(Value2))
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
-                
+                break;
                 case 6:         // BLTU
                 {
                     if (bitsStringToUnsigned(Value1) < bitsStringToUnsigned(Value2))
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
-
+                break;
                 case 7:         // BGEU
                 {
                     if (bitsStringToUnsigned(Value1) >= bitsStringToUnsigned(Value2))
                     {
-                        *OutputPort = "1";
+                        *OutputPort = '1';
                     }
+                    else *OutputPort = '0';
                 }
-
+                break;
                 default:
                 {
                     throw invalid_argument("Invalid Func3 value");
@@ -1684,10 +1821,10 @@ class BranchCmp
         }
 };
 
-class DataMemory
+class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Address;
         string WriteData;
@@ -1714,10 +1851,10 @@ class DataMemory
             Memory.clear();
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr);    // Ensure connection is not null
-            assert(connection->size() == 32); // Ensure connection is the correct size
+            // assert(connection->size() == 32); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
@@ -1728,31 +1865,53 @@ class DataMemory
             assert(MemRead == "0");
             if (FUNC3 == 0)         // store byte
             {
-                Memory[Address] = string(32,'0');
-                for (int i = 31; i>=25; i--)
+                Memory[Address] = string(8,'0');
+                for (int i = 0; i < 8; i++)
                 {
-                    Memory[Address][i] = WriteData[i];
-                }
-                for (int i = 24; i>=0; i--)
-                {
-                    Memory[Address][i] = WriteData[24];
+                    Memory[Address][i] = WriteData[24+i];
                 }
             }
             else if(FUNC3 == 1)     // store halfword
             {
-                Memory[Address] = string(32,'0');
-                for (int i = 31; i>=17; i--)
+                unsigned temp = bitsStringToUnsigned(Address)+1;
+                string tempaddr = unsignedToBitsString(temp);
+                
+                Memory[Address] = string(8,'0');
+                Memory[tempaddr] = string(8,'0');
+                for (int i = 0; i < 8; i++)
                 {
-                    Memory[Address][i] = WriteData[i];
+                    Memory[tempaddr][i] = WriteData[16+i];
                 }
-                for (int i = 16; i>=0; i--)
+                for (int i = 0; i < 8; i++)
                 {
-                    Memory[Address][i] = WriteData[16];
+                    Memory[Address][i] = WriteData[24+i];
                 }
+                
             }
             else if(FUNC3 == 2)     // store word
             {
-                Memory[Address] = WriteData;
+                unsigned temp = bitsStringToUnsigned(Address);
+
+                string temp1 = unsignedToBitsString(temp+1);
+                string temp2 = unsignedToBitsString(temp+2);
+                string temp3 = unsignedToBitsString(temp+3);
+                for (int i = 0; i < 8; i++)
+                {
+                    Memory[temp3][i] = WriteData[i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    Memory[temp2][i] = WriteData[8+i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    Memory[temp1][i] = WriteData[16+i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    Memory[Address][i] = WriteData[24+i];
+                }
+                
             }
         }
 
@@ -1764,48 +1923,85 @@ class DataMemory
             string result = string(32,'0');
             if (FUNC3 == 0)          // load byte
             {
-                for (int i = 31; i >= 25; i--)
+                for (int i = 0; i < 8; i++)
                 {
-                    result[i] = Memory[Address][i];
+                    result[24+i] = Memory[Address][i];
                 }
-                for (int i = 24; i >= 0; i--)
+                for (int i = 0; i < 24; i++)
                 {
-                    result[i] = Memory[Address][24];
+                    result[i] = Memory[Address][0];          // SIGN EXTENSION
                 }
             }
             else if (FUNC3 == 1)     // load halfword
             {
-                for (int i = 31; i >= 17; i--)
+                unsigned tempu = bitsStringToUnsigned(Address)+1;
+
+                string temp = unsignedToBitsString(tempu);
+                for (int i = 0; i < 16; i++)
                 {
-                    result[i] = Memory[Address][i];
+                    result[i] = Memory[temp][0];        // SIGN EXTENSION
                 }
-                for (int i = 16; i >= 0; i--)
+                for (int i = 0; i < 8; i++)
                 {
-                    result[i] = Memory[Address][16];
+                    result[16+i] = Memory[temp][i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    result[24+i] = Memory[Address][i];
                 }
             }
             else if (FUNC3 == 2)     // load word
             {
-                result = Memory[Address];
+                unsigned temp = bitsStringToUnsigned(Address);
+
+                string temp1 = unsignedToBitsString(temp+1);
+                string temp2 = unsignedToBitsString(temp+2);
+                string temp3 = unsignedToBitsString(temp+3);
+                for (int i = 0; i < 8; i++)
+                {
+                    result[i] = Memory[temp3][i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    result[8+i] = Memory[temp2][i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    result[16+i] = Memory[temp1][i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    result[24+i] = Memory[Address][i];
+                }
             }
             else if (FUNC3 == 4)     // load byte unsigned
             {
-                for (int i = 31; i >= 24; i--)
+                for (int i = 0; i < 8; i++)
                 {
-                    result[i] = Memory[Address][i];
+                    result[24+i] = Memory[Address][i];
                 }
             }
             else if (FUNC3 == 5)     // load halfword unsigned
             {
-                for (int i = 31; i >= 16; i--)
+                unsigned tempu = bitsStringToUnsigned(Address)+1;
+
+                string temp = unsignedToBitsString(tempu);
+                for (int i = 0; i < 8; i++)
                 {
-                    result[i] = Memory[Address][i];
+                    result[16+i] = Memory[temp][i];
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    result[24+i] = Memory[Address][i];
                 }
             }
             for (auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                for (size_t i = 0; i < 32; i++)
+                {
+                    port[i] = result[i];
+                }
             }
         }
 
@@ -1818,7 +2014,7 @@ class DataMemory
 class ANDGate
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input1;
         string Input2;
@@ -1835,7 +2031,7 @@ class ANDGate
             Input2 = "0";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPorts.insert(connection);
@@ -1847,7 +2043,8 @@ class ANDGate
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                port[0] = result[0];
+                
             }
         }
 
@@ -1860,7 +2057,7 @@ class ANDGate
 class ORGate
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input1;
         string Input2;
@@ -1877,7 +2074,7 @@ class ORGate
             Input2 = "0";
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
             OutputPorts.insert(connection);
@@ -1889,7 +2086,7 @@ class ORGate
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                port[0] = result[0];
             }
         }
 
@@ -1902,7 +2099,7 @@ class ORGate
 class Adder
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input1;
         string Input2;
@@ -1921,24 +2118,27 @@ class Adder
             Input2 = string(dataSizeBits, '0');
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            // assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
         void Step()
         {
-            unsigned inp1 = bitsStringToUnsigned(Input1);
-            unsigned inp2 = bitsStringToUnsigned(Input2);
-            unsigned res = inp1 + inp2;
-            string result = unsignedToBitsString(res).substr(32 - dataSizeBits);
+            int inp1 = bitsStringToInt(Input1);
+            int inp2 = bitsStringToInt(Input2);
+            int res = inp1 + inp2;
+            string result = intToBitsString(res).substr(32 - dataSizeBits);
 
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                for (size_t i = 0; i < dataSizeBits; i++)
+                {
+                    port[i] = result[i];
+                }
             }
         }
 
@@ -1951,18 +2151,18 @@ class Adder
 class PCAdder : public Adder
 {
     public:
-        string PC;
+        // string PC;
 
         PCAdder() : Adder(32)
         {
-            Input1 = PC;
+            // Input1 = PC;
             Input2 = unsignedToBitsString(4);
         }
 
         void Reset()
         {
             Adder::Reset();
-            Input1 = PC;
+            // Input1 = PC;
             Input2 = unsignedToBitsString(4);
         }
 };
@@ -1970,7 +2170,7 @@ class PCAdder : public Adder
 class LeftShift
 {
     private:
-        unordered_set<string*> OutputPorts;
+        unordered_set<char*> OutputPorts;
     public:
         string Input;
         size_t dataSizeBits;
@@ -1986,21 +2186,23 @@ class LeftShift
             Input = string(dataSizeBits, '0');
         }
 
-        void ConnectOutput(string* connection)
+        void ConnectOutput(char* connection)
         {
             assert(connection != nullptr); // Ensure connection is not null
-            assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
+            // assert(connection->size() == dataSizeBits); // Ensure connection is the correct size
             OutputPorts.insert(connection);
         }
 
         void Step()
         {
             string result = Input.substr(1) + '0';
-            result = result.substr(1);
             for(auto port : OutputPorts)
             {
                 assert(port != nullptr); // Ensure port is not null
-                *port = result;
+                for (size_t i = 0; i < dataSizeBits; i++)
+                {
+                    port[i] = result[i];
+                }
             }
         }
 

@@ -1,0 +1,125 @@
+0:        00000093        addi x1 x0 0
+4:        00000113        addi x2 x0 0
+8:        00208f33        add x30 x1 x2
+c:        00000e93        addi x29 x0 0
+10:        00200193        addi x3 x0 2
+14:        1ddf1a63        bne x30 x29 468
+18:        00100093        addi x1 x0 1
+1c:        00100113        addi x2 x0 1
+20:        00208f33        add x30 x1 x2
+24:        00200e93        addi x29 x0 2
+28:        00300193        addi x3 x0 3
+2c:        1bdf1e63        bne x30 x29 444
+30:        00300093        addi x1 x0 3
+34:        00700113        addi x2 x0 7
+38:        00208f33        add x30 x1 x2
+3c:        00a00e93        addi x29 x0 10
+40:        00400193        addi x3 x0 4
+44:        1bdf1263        bne x30 x29 420
+48:        00000093        addi x1 x0 0
+4c:        ffff8137        lui x2 0xffff8
+50:        00208f33        add x30 x1 x2
+54:        ffff8eb7        lui x29 0xffff8
+58:        00500193        addi x3 x0 5
+5c:        19df1663        bne x30 x29 396
+60:        800000b7        lui x1 0x80000
+64:        00000113        addi x2 x0 0
+68:        00208f33        add x30 x1 x2
+6c:        80000eb7        lui x29 0x80000
+70:        00600193        addi x3 x0 6
+74:        17df1a63        bne x30 x29 372
+78:        800000b7        lui x1 0x80000
+7c:        ffff8137        lui x2 0xffff8
+80:        00208f33        add x30 x1 x2
+84:        7fff8eb7        lui x29 0x7fff8
+88:        00700193        addi x3 x0 7
+8c:        15df1e63        bne x30 x29 348
+90:        00000093        addi x1 x0 0
+94:        00008137        lui x2 0x8
+98:        fff10113        addi x2 x2 -1
+9c:        00208f33        add x30 x1 x2
+a0:        00008eb7        lui x29 0x8
+a4:        fffe8e93        addi x29 x29 -1
+a8:        00800193        addi x3 x0 8
+ac:        13df1e63        bne x30 x29 316
+b0:        800000b7        lui x1 0x80000
+b4:        fff08093        addi x1 x1 -1
+b8:        00000113        addi x2 x0 0
+bc:        00208f33        add x30 x1 x2
+c0:        80000eb7        lui x29 0x80000
+c4:        fffe8e93        addi x29 x29 -1
+c8:        00900193        addi x3 x0 9
+cc:        11df1e63        bne x30 x29 284
+d0:        800000b7        lui x1 0x80000
+d4:        fff08093        addi x1 x1 -1
+d8:        00008137        lui x2 0x8
+dc:        fff10113        addi x2 x2 -1
+e0:        00208f33        add x30 x1 x2
+e4:        80008eb7        lui x29 0x80008
+e8:        ffee8e93        addi x29 x29 -2
+ec:        00a00193        addi x3 x0 10
+f0:        0fdf1c63        bne x30 x29 248
+f4:        800000b7        lui x1 0x80000
+f8:        00008137        lui x2 0x8
+fc:        fff10113        addi x2 x2 -1
+100:        00208f33        add x30 x1 x2
+104:        80008eb7        lui x29 0x80008
+108:        fffe8e93        addi x29 x29 -1
+10c:        00b00193        addi x3 x0 11
+110:        0ddf1c63        bne x30 x29 216
+114:        800000b7        lui x1 0x80000
+118:        fff08093        addi x1 x1 -1
+11c:        ffff8137        lui x2 0xffff8
+120:        00208f33        add x30 x1 x2
+124:        7fff8eb7        lui x29 0x7fff8
+128:        fffe8e93        addi x29 x29 -1
+12c:        00c00193        addi x3 x0 12
+130:        0bdf1c63        bne x30 x29 184
+134:        00000093        addi x1 x0 0
+138:        fff00113        addi x2 x0 -1
+13c:        00208f33        add x30 x1 x2
+140:        fff00e93        addi x29 x0 -1
+144:        00d00193        addi x3 x0 13
+148:        0bdf1063        bne x30 x29 160
+14c:        fff00093        addi x1 x0 -1
+150:        00100113        addi x2 x0 1
+154:        00208f33        add x30 x1 x2
+158:        00000e93        addi x29 x0 0
+15c:        00e00193        addi x3 x0 14
+160:        09df1463        bne x30 x29 136
+164:        fff00093        addi x1 x0 -1
+168:        fff00113        addi x2 x0 -1
+16c:        00208f33        add x30 x1 x2
+170:        ffe00e93        addi x29 x0 -2
+174:        00f00193        addi x3 x0 15
+178:        07df1863        bne x30 x29 112
+17c:        00100093        addi x1 x0 1
+180:        80000137        lui x2 0x80000
+184:        fff10113        addi x2 x2 -1
+188:        00208f33        add x30 x1 x2
+18c:        80000eb7        lui x29 0x80000
+190:        01000193        addi x3 x0 16
+194:        05df1a63        bne x30 x29 84
+198:        00d00093        addi x1 x0 13
+19c:        00b00113        addi x2 x0 11
+1a0:        002080b3        add x1 x1 x2
+1a4:        01800e93        addi x29 x0 24
+1a8:        01100193        addi x3 x0 17
+1ac:        03d09e63        bne x1 x29 60
+1b0:        00e00093        addi x1 x0 14
+1b4:        00b00113        addi x2 x0 11
+1b8:        00208133        add x2 x1 x2
+1bc:        01900e93        addi x29 x0 25
+1c0:        01200193        addi x3 x0 18
+1c4:        03d11263        bne x2 x29 36
+1c8:        00d00093        addi x1 x0 13
+1cc:        001080b3        add x1 x1 x1
+1d0:        01a00e93        addi x29 x0 26
+1d4:        01300193        addi x3 x0 19
+1d8:        01d09863        bne x1 x29 16
+1dc:        02a00513        addi x10 x0 42
+1e0:        05d00893        addi x17 x0 93
+1e4:        00000073        ecall
+1e8:        00000513        addi x10 x0 0
+1ec:        05d00893        addi x17 x0 93
+1f0:        00000073        ecall
