@@ -1,0 +1,34 @@
+# RISC-V Assembly Code to Test Data Memory
+# This program writes to and reads from data memory to verify its functionality.
+
+    .section .rodata
+test_data: 
+    .word 0x12345678  # Initial test data
+    .word 0xDEADBEEF  # Another test data value
+    .word 0x0         # Placeholder for result
+
+    .section .text
+    .globl _start
+
+_start:
+    # Load the first test data into a register
+    la t0, test_data       # Load address of test_data
+    lw t1, 0(t0)           # Load first word into t1
+    lw t2, 4(t0)           # Load second word into t2
+
+    # Perform a simple operation and store the result
+    add t3, t1, t2         # Add t1 and t2, store result in t3
+    sw t3, 8(t0)           # Store the result back into memory
+
+    # Verify the stored result
+    lw t4, 8(t0)           # Load the result back into t4
+    beq t3, t4, success    # If t3 == t4, jump to success
+    j failure              # Otherwise, jump to failure
+
+success:
+    # Indicate success (e.g., infinite loop)
+    ecall
+
+failure:
+    # Indicate failure (e.g., infinite loop)
+    j failure

@@ -71,8 +71,6 @@ public:
         IF_ID_Reg.ConnectOutput(32, 63, &ImmGen.Instruction[0]);
         IF_ID_Reg.ConnectOutput(32, 38, &ID_EX_Reg.Data[10+128]);//funct7
         IF_ID_Reg.ConnectOutput(49, 51, &ID_EX_Reg.Data[10+128+7]);//funct3
-        //IF_ID_Reg.ConnectOutput(49, 51, &DataMemory_Unit.Func3);//funct3          // ARJUN CONFIRM THIS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // IF_ID_Reg.ConnectOutput(49, 51, &DataMemory_Unit.Func3[0]);//funct3         // ARJUN CONFIRM THIS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         IF_ID_Reg.ConnectOutput(44, 48, &ID_EX_Reg.Data[10+128+10]); //Rs1 hopefully
         IF_ID_Reg.ConnectOutput(39, 43, &ID_EX_Reg.Data[10+128+10+5]); //Rs2 hopefully

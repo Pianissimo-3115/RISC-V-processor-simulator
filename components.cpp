@@ -283,6 +283,7 @@ class HazardDetectionUnitNoFwd
             (
                 (
                     ID_EX_RegWrite == "1"
+                    && ID_EX_RegisterRd != "00000"
                     && 
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1 
@@ -292,6 +293,7 @@ class HazardDetectionUnitNoFwd
                 ||
                 (
                     EX_MEM_RegWrite == "1"
+                    && EX_MEM_RegisterRd != "00000"
                     &&
                     (
                         EX_MEM_RegisterRd == IF_ID_RegisterRs1
@@ -370,6 +372,7 @@ class HazardDetectionUnit
             (
                 (
                     ID_EX_Memread == "1"            // R type instructions
+                    && ID_EX_RegisterRd != "00000"
                     && 
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1 
@@ -379,6 +382,7 @@ class HazardDetectionUnit
                 ||
                 (
                     EX_MEM_Memread == "1"
+                    && EX_MEM_RegisterRd != "00000"
                     &&
                     (
                         EX_MEM_RegisterRd == IF_ID_RegisterRs1
@@ -389,6 +393,7 @@ class HazardDetectionUnit
                 ||
                 (
                     ID_EX_RegWrite == "1"
+                    && ID_EX_RegisterRd != "00000"
                     &&
                     (
                         ID_EX_RegisterRd == IF_ID_RegisterRs1

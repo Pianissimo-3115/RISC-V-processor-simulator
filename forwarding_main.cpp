@@ -3,7 +3,7 @@
 
 // #include <bits/stdc++.h>
 
-#include "architecture.cpp"
+#include "forwarding_architecture.cpp"
 #include<vector>
 #include<tuple>
 #include<iostream>
