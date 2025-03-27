@@ -63,7 +63,7 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
 
         string instr = "";
 
-        while(line[i] != '\0' && line[i] != '\n') {
+        while(line[i] != '\0' && line[i] != '\n' && line[i] != '\r') {
 
             instr += line[i];
 

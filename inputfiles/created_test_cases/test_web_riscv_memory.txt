@@ -1,0 +1,21 @@
+0:        ffc10413        addi x8 x2 -4
+4:        fd410493        addi x9 x2 -44
+8:        00a00293        addi x5 x0 10
+c:        00100313        addi x6 x0 1
+10:        00040933        add x18 x8 x0
+14:        00628a63        beq x5 x6 20 <FineInserimento>
+18:        ffc90913        addi x18 x18 -4
+1c:        00692023        sw x6 0 x18
+20:        00130313        addi x6 x6 1
+24:        ff1ff06f        jal x0 -16 <Inserimento>
+28:        00100313        addi x6 x0 1
+2c:        00040933        add x18 x8 x0
+30:        000489b3        add x19 x9 x0
+34:        00628e63        beq x5 x6 28 <FineProgramma>
+38:        ffc90913        addi x18 x18 -4
+3c:        00092383        lw x7 0 x18
+40:        ffc98993        addi x19 x19 -4
+44:        0079a023        sw x7 0 x19
+48:        00130313        addi x6 x6 1
+4c:        fe9ff06f        jal x0 -24 <Copia>
+50:        00000033        add x0 x0 x0

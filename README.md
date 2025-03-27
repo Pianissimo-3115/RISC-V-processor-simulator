@@ -23,5 +23,5 @@ This decision was made to minimize C++ abstraction and ensure the implementation
 - [RISC-V Specification for Instruction Structure](https://csg.csail.mit.edu/6.375/6_375_2019_www/resources/riscv-spec.pdf)
 - [Textbook (Hennessy and Patterson, Computer Organization) for logic decisions](https://www.cse.iitd.ac.in/~rijurekha/col216_2025/HandP_RISCV.pdf)
 - [WebRISC-V Model for Reference](https://webriscv.dii.unisi.it/index.php)
-- [Opcodes, ALUOp, and ALUControl Tables](https://www.cs.sfu.ca~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf)
+- [Opcodes, ALUOp, and ALUControl Tables](https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf)
 - [Some testcases](https://github.com/TheThirdOne/rars/tree/master/test)
