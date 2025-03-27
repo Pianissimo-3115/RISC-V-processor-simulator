@@ -347,6 +347,7 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
         
     }
     
+    delete rv32;
     
 
 }
