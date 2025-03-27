@@ -26,10 +26,10 @@ c:        00542023        sw x5 0 x8
 64:        01c39863        bne x7 x28 16 <fail>
 68:        02a00513        addi x10 x0 42
 6c:        05d00893        addi x17 x0 93
-70:        00000073        ecall
+70:        0000006f        TEST_PASSED
 74:        00000513        addi x10 x0 0
 78:        05d00893        addi x17 x0 93
-7c:        00000013        addi x0 x0 0
+7c:        0000006f        TEST_FAILED
 80:        00000293        addi x5 x0 0
 84:        00000313        addi x6 x0 0
 88:        00000393        addi x7 x0 0

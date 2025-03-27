@@ -56,7 +56,7 @@ d8:        01df1463        bne x30 x29 8 <fail>
 dc:        00301863        bne x0 x3 16 <pass>
 e0:        00000513        addi x10 x0 0
 e4:        05d00893        addi x17 x0 93
-e8:        00000073        ecall
+e8:        0000006f        TEST_FAILED
 ec:        02a00513        addi x10 x0 42
 f0:        05d00893        addi x17 x0 93
-f4:        00000073        ecall
+f4:        0000006f        TEST_PASSED

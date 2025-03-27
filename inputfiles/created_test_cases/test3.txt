@@ -6,7 +6,7 @@ c:        fff28293        addi x5 x5 -1
 14:        00031863        bne x6 x0 16 <success>
 18:        00000513        addi x10 x0 0
 1c:        05d00893        addi x17 x0 93
-20:        00000073        ecall
+20:        0000006f        TEST_FAILED
 24:        02a00513        addi x10 x0 42
 28:        05d00893        addi x17 x0 93
-2c:        00000073        ecall
+2c:        0000006f        TEST_PASSED

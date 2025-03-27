@@ -119,7 +119,7 @@ fc:        fff10113        addi x2 x2 -1
 1d8:        01d09863        bne x1 x29 16
 1dc:        02a00513        addi x10 x0 42
 1e0:        05d00893        addi x17 x0 93
-1e4:        00000073        ecall
+1e4:        0000006f        TEST_PASSED
 1e8:        00000513        addi x10 x0 0
 1ec:        05d00893        addi x17 x0 93
-1f0:        00000073        ecall
+1f0:        0000006f        TEST_FAILED

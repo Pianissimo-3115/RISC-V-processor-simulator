@@ -34,7 +34,7 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
 
     vector<string> instr_statements;
     vector<tuple<string, int, int, int, int, int>> exec_table;
-    cout<<inputfile<<"Hello";
+    // cout<<inputfile<<"Hello";
     FILE* f = fopen(inputfile, "r");
 
     char line[256];
@@ -70,7 +70,6 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
             i++;
 
         }
-
         instr_statements.push_back(instr);
 
     }
@@ -78,9 +77,17 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
     fclose(f);
 
     
+    size_t pos = string(inputfile).find_last_of('/');
+    string filename = (pos != string::npos) ? string(inputfile).substr(pos + 1) : string(inputfile);
 
-
-
+    size_t ext_pos = filename.find(".txt");
+    if (ext_pos != string::npos) {
+        filename.replace(ext_pos, 4, "_forward_debug.txt");
+    }
+    string result = "./debug/" + filename;
+    // cout << "Debug output file: " << result.c_str() << endl;
+    /*auto abc =*/ freopen(result.c_str(),"w", stdout);
+    // if(abc==NULL) cout<<"this "<<errno<<endl;
     RV32Forwarding* rv32 = new RV32Forwarding();
 
     rv32->LoadInstructions(instructions);
@@ -309,12 +316,27 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
             
         // }
     }
+    
+    fclose(stdout);
+
+    pos = string(inputfile).find_last_of('/');
+    filename = (pos != string::npos) ? string(inputfile).substr(pos + 1) : string(inputfile);
+
+    ext_pos = filename.find(".txt");
+    if (ext_pos != string::npos) {
+        filename.replace(ext_pos, 4, "_forward_out.txt");
+    }
+
+    result = "./outputfiles/" + filename;
+
+    freopen(result.c_str(),"w", stdout);
 
     for (int i = 0; i < exec_table.size(); i++)
     {
-        string temp = get<0>(exec_table[i]).substr(0, get<0>(exec_table[i]).size()-1);
+        string temp = get<0>(exec_table[i]).substr(0, get<0>(exec_table[i]).size()/*-1*/);
+
         temp.resize(20, ' ');
-        cout<<temp<<": ";
+        cout<<temp<<"; ";
         for (int j = cycles_start; j < cycles; j++)
         {
             if (get<1>(exec_table[i]) == j)
@@ -347,7 +369,8 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
         
     }
     
-    // delete rv32;
+    fclose(stdout);
+    delete rv32;
     
 
 }

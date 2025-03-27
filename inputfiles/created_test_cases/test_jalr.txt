@@ -13,7 +13,7 @@ c:        0280006f        jal x0 40 <failure>
 30:        ffc282e7        jalr x5 x5 -4
 34:        00000513        addi x10 x0 0
 38:        05d00893        addi x17 x0 93
-3c:        00000073        ecall
+3c:        0000006f        TEST_FAILED
 40:        02a00513        addi x10 x0 42
 44:        05d00893        addi x17 x0 93
-48:        00000073        ecall
+48:        0000006f        TEST_PASSED

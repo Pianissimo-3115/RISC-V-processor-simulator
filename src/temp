@@ -1,0 +1,83 @@
+#include <iostream>
+#include <cstdio>
+#include <cerrno>
+#include <filesystem>
+#include <string>
+
+void diagnoseFileOpen(const std::string& filepath) {
+    // Detailed diagnostic checks
+    std::cout << "--- File Opening Diagnostic ---\n";
+    
+    // 1. Check if directory exists
+    std::filesystem::path dir_path = std::filesystem::path(filepath).parent_path();
+    std::cout << "Directory Path: " << dir_path << std::endl;
+    
+    if (!std::filesystem::exists(dir_path)) {
+        std::cout << "ERROR: Directory does not exist!\n";
+        return;
+    }
+    
+    // 2. Check directory permissions
+    auto perms = std::filesystem::status(dir_path).permissions();
+    std::cout << "Directory Permissions:\n";
+    std::cout << "Owner Write: " << bool(perms & std::filesystem::perms::owner_write) << std::endl;
+    std::cout << "Group Write: " << bool(perms & std::filesystem::perms::group_write) << std::endl;
+    std::cout << "Others Write: " << bool(perms & std::filesystem::perms::others_write) << std::endl;
+    
+    // 3. Attempt file opening
+    std::cout << "\nAttempting to open file: " << filepath << std::endl;
+    FILE* testFile = fopen(filepath.c_str(), "w");
+    
+    if (testFile == nullptr) {
+        std::cout << "fopen() failed\n";
+        std::cout << "Error Number: " << errno << std::endl;
+        
+        switch(errno) {
+            case EACCES: 
+                std::cout << "EACCES: Permission denied\n"; 
+                break;
+            case ENOENT: 
+                std::cout << "ENOENT: No such file or directory\n"; 
+                break;
+            case EROFS: 
+                std::cout << "EROFS: Read-only file system\n"; 
+                break;
+            default:
+                std::cout << "Unknown error\n";
+        }
+        
+        // Attempt to get system error description
+        perror("Detailed error");
+    } else {
+        std::cout << "File opened successfully\n";
+        fclose(testFile);
+    }
+}
+
+int main() {
+    // Replace with your actual file path
+    diagnoseFileOpen("./debug/output.txt");
+    return 0;
+}
+```
+
+This diagnostic script will:
+1. Check if the directory exists
+2. Show directory permissions
+3. Attempt to open the file
+4. Provide detailed error information
+
+Key things to check:
+- Full absolute path
+- Ensure no typos in path
+- Check for any restrictive system policies
+- Verify no conflicting file locks
+
+Could you compile and run this diagnostic script? The output will help pinpoint exactly why file opening is failing.
+
+A few additional quick checks:
+1. Are you running this in a containerized or restricted environment?
+2. Is the full path correct?
+3. Are there any antivirus or security software interfering?
+
+Would you like me to help you interpret the diagnostic results?
