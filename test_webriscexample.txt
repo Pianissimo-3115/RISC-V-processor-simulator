@@ -1,0 +1,20 @@
+0:        00200413        addi x8 x0 2
+4:        00500493        addi x9 x0 5
+8:        00a00913        addi x18 x0 10
+c:        00100293        addi x5 x0 1
+10:        02540063        beq x8 x5 32 <somma>
+14:        00200313        addi x6 x0 2
+18:        02640063        beq x8 x6 32 <sottrazione>
+1c:        00300393        addi x7 x0 3
+20:        02740063        beq x8 x7 32 <molt>
+24:        00400e13        addi x28 x0 4
+28:        03c40063        beq x8 x28 32 <div>
+2c:        0200006f        jal x0 32 <fine>
+30:        012489b3        add x19 x9 x18
+34:        0180006f        jal x0 24 <fine>
+38:        412489b3        sub x19 x9 x18
+3c:        0100006f        jal x0 16 <fine>
+40:        032489b3        mul x19 x9 x18
+44:        0080006f        jal x0 8 <fine>
+48:        0324c9b3        div x19 x9 x18
+4c:        00000013        addi x0 x0 0

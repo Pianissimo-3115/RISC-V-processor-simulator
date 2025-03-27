@@ -1,0 +1,19 @@
+0:        00000297        auipc x5 0x0 <main>
+4:        01428293        addi x5 x5 20
+8:        008282e7        jalr x5 x5 8
+c:        0280006f        jal x0 40 <failure>
+10:        0300006f        jal x0 48 <success>
+14:        0200006f        jal x0 32 <failure>
+18:        01c0006f        jal x0 28 <failure>
+1c:        00000317        auipc x6 0x0 <main>
+20:        ff030313        addi x6 x6 -16
+24:        00629863        bne x5 x6 16 <failure>
+28:        00000297        auipc x5 0x0 <main>
+2c:        fec28293        addi x5 x5 -20
+30:        ffc282e7        jalr x5 x5 -4
+34:        00000513        addi x10 x0 0
+38:        05d00893        addi x17 x0 93
+3c:        00000073        ecall
+40:        02a00513        addi x10 x0 42
+44:        05d00893        addi x17 x0 93
+48:        00000073        ecall

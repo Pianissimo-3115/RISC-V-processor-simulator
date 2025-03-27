@@ -1,0 +1,62 @@
+0:        01400093        addi x1 x0 20
+4:        00600113        addi x2 x0 6
+8:        0220df33        divu x30 x1 x2
+c:        00300e93        addi x29 x0 3
+10:        00200193        addi x3 x0 2
+14:        0ddf1663        bne x30 x29 204 <fail>
+18:        fec00093        addi x1 x0 -20
+1c:        00600113        addi x2 x0 6
+20:        0220df33        divu x30 x1 x2
+24:        2aaabeb7        lui x29 0x2aaab
+28:        aa7e8e93        addi x29 x29 -1369
+2c:        00300193        addi x3 x0 3
+30:        0bdf1863        bne x30 x29 176 <fail>
+34:        01400093        addi x1 x0 20
+38:        ffa00113        addi x2 x0 -6
+3c:        0220df33        divu x30 x1 x2
+40:        00000e93        addi x29 x0 0
+44:        00400193        addi x3 x0 4
+48:        09df1c63        bne x30 x29 152 <fail>
+4c:        fec00093        addi x1 x0 -20
+50:        ffa00113        addi x2 x0 -6
+54:        0220df33        divu x30 x1 x2
+58:        00000e93        addi x29 x0 0
+5c:        00500193        addi x3 x0 5
+60:        09df1063        bne x30 x29 128 <fail>
+64:        800000b7        lui x1 0x80000
+68:        00100113        addi x2 x0 1
+6c:        0220df33        divu x30 x1 x2
+70:        80000eb7        lui x29 0x80000
+74:        00600193        addi x3 x0 6
+78:        07df1463        bne x30 x29 104 <fail>
+7c:        800000b7        lui x1 0x80000
+80:        fff00113        addi x2 x0 -1
+84:        0220df33        divu x30 x1 x2
+88:        00000e93        addi x29 x0 0
+8c:        00700193        addi x3 x0 7
+90:        05df1863        bne x30 x29 80 <fail>
+94:        800000b7        lui x1 0x80000
+98:        00000113        addi x2 x0 0
+9c:        0220df33        divu x30 x1 x2
+a0:        fff00e93        addi x29 x0 -1
+a4:        00800193        addi x3 x0 8
+a8:        03df1c63        bne x30 x29 56 <fail>
+ac:        00100093        addi x1 x0 1
+b0:        00000113        addi x2 x0 0
+b4:        0220df33        divu x30 x1 x2
+b8:        fff00e93        addi x29 x0 -1
+bc:        00900193        addi x3 x0 9
+c0:        03df1063        bne x30 x29 32 <fail>
+c4:        00000093        addi x1 x0 0
+c8:        00000113        addi x2 x0 0
+cc:        0220df33        divu x30 x1 x2
+d0:        fff00e93        addi x29 x0 -1
+d4:        00a00193        addi x3 x0 10
+d8:        01df1463        bne x30 x29 8 <fail>
+dc:        00301863        bne x0 x3 16 <pass>
+e0:        00000513        addi x10 x0 0
+e4:        05d00893        addi x17 x0 93
+e8:        00000073        ecall
+ec:        02a00513        addi x10 x0 42
+f0:        05d00893        addi x17 x0 93
+f4:        00000073        ecall

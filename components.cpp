@@ -1,5 +1,5 @@
 #include<bits/stdc++.h>
-#include<limits>
+// #include<limits>
 // #include<string>
 // #include<bitset>
 // #include<unordered_set>
@@ -503,12 +503,12 @@ class ALUx32
                 }
                 case 4:         // slt
                 {
-                    zero = (((int)inp1 < (int)inp2) ? "1" : "0");
+                    result = (((int)inp1 < (int)inp2) ? string(31, '0')+"1" : string(32, '0'));
                     break;
                 }
                 case 5:         // sltu
                 {
-                    zero = ((inp1 < inp2) ? "1" : "0");
+                    result = ((inp1 < inp2) ? string(31, '0')+"1" : string(32, '0'));
                     break;
                 }
                 case 6:         // Sub
@@ -674,7 +674,7 @@ class RegisterMemx32
                 {
                     Registers[i] = string(32, '1');
                 }
-                Registers[i] = string(32, '0');
+                else Registers[i] = string(32, '0');
             }
         }
 
@@ -687,7 +687,11 @@ class RegisterMemx32
             WriteEnable = "0";
             for(int i = 0; i < 32; i++)
             {
-                Registers[i] = string(32, '0');
+                if (i == 2)
+                {
+                    Registers[i] = string(32, '1');
+                }
+                else Registers[i] = string(32, '0');
             }
         }
 
@@ -877,9 +881,9 @@ class ImmediateGen
                 }
                 for (int i = 27; i < 31; i++)
                 {
-                    immediate[i] = Instruction[i-6];
+                    immediate[i] = Instruction[i-7];
                 }
-                immediate[31] = Instruction[25];
+                immediate[31] = Instruction[24];
             }
             else if (Instruction.substr(25, 7) == "1100011") //SB type Hopefully ab sahi hai
             {
@@ -1891,10 +1895,14 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
             else if(FUNC3 == 2)     // store word
             {
                 unsigned temp = bitsStringToUnsigned(Address);
-
+                cout<<"**"<<temp<<"**"<<endl;
                 string temp1 = unsignedToBitsString(temp+1);
                 string temp2 = unsignedToBitsString(temp+2);
                 string temp3 = unsignedToBitsString(temp+3);
+                Memory[Address] = string(8,'0');
+                Memory[temp1] = string(8,'0');
+                Memory[temp2] = string(8,'0');
+                Memory[temp3] = string(8,'0');
                 for (int i = 0; i < 8; i++)
                 {
                     Memory[temp3][i] = WriteData[i];
@@ -1921,6 +1929,7 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
             if (MemRead == "0") return;
             assert(MemWrite == "0"); // Ensure MemWrite is 0
             string result = string(32,'0');
+            if (Memory[Address] == "") Memory[Address] = string(8, '0');
             if (FUNC3 == 0)          // load byte
             {
                 for (int i = 0; i < 8; i++)
@@ -1937,6 +1946,9 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
                 unsigned tempu = bitsStringToUnsigned(Address)+1;
 
                 string temp = unsignedToBitsString(tempu);
+                if (Memory[Address] == "") Memory[Address] = string(8, '0');
+                if (Memory[temp] == "") Memory[temp] = string(8, '0');
+
                 for (int i = 0; i < 16; i++)
                 {
                     result[i] = Memory[temp][0];        // SIGN EXTENSION
@@ -1957,6 +1969,11 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
                 string temp1 = unsignedToBitsString(temp+1);
                 string temp2 = unsignedToBitsString(temp+2);
                 string temp3 = unsignedToBitsString(temp+3);
+                if (Memory[Address] == "") Memory[Address] = string(8, '0');
+                if (Memory[temp1] == "") Memory[temp1] = string(8, '0');
+                if (Memory[temp2] == "") Memory[temp2] = string(8, '0');
+                if (Memory[temp3] == "") Memory[temp3] = string(8, '0');
+
                 for (int i = 0; i < 8; i++)
                 {
                     result[i] = Memory[temp3][i];
@@ -1976,6 +1993,7 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
             }
             else if (FUNC3 == 4)     // load byte unsigned
             {
+                if (Memory[Address] == "") Memory[Address] = string(8, '0');
                 for (int i = 0; i < 8; i++)
                 {
                     result[24+i] = Memory[Address][i];
@@ -1986,6 +2004,8 @@ class DataMemory                        // FOLLOWING LITTLE-ENDIAN BYTE ORDER
                 unsigned tempu = bitsStringToUnsigned(Address)+1;
 
                 string temp = unsignedToBitsString(tempu);
+                if (Memory[Address] == "") Memory[Address] = string(8, '0');
+                if (Memory[temp] == "") Memory[temp] = string(8, '0');
                 for (int i = 0; i < 8; i++)
                 {
                     result[16+i] = Memory[temp][i];

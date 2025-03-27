@@ -1,0 +1,12 @@
+0:        03c00293        addi x5 x0 60
+4:        00000313        addi x6 x0 0
+8:        00530313        addi x6 x6 5
+c:        fff28293        addi x5 x5 -1
+10:        fe531ce3        bne x6 x5 -8 <loop>
+14:        00031863        bne x6 x0 16 <success>
+18:        00000513        addi x10 x0 0
+1c:        05d00893        addi x17 x0 93
+20:        00000073        ecall
+24:        02a00513        addi x10 x0 42
+28:        05d00893        addi x17 x0 93
+2c:        00000073        ecall
