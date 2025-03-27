@@ -388,7 +388,7 @@ class HazardDetectionUnit
                         EX_MEM_RegisterRd == IF_ID_RegisterRs1
                         || EX_MEM_RegisterRd == IF_ID_RegisterRs2
                     )
-                    && OPCODE == 0b1100011          // BRANCH instruction with load instruction 2 lines above it
+                    && (OPCODE == 0b1100011 || OPCODE == 0b1100111)          // BRANCH instruction with load instruction 2 lines above it
                 )
                 ||
                 (
@@ -399,7 +399,7 @@ class HazardDetectionUnit
                         ID_EX_RegisterRd == IF_ID_RegisterRs1
                         || ID_EX_RegisterRd == IF_ID_RegisterRs2
                     )
-                    && OPCODE == 0b1100011          // BRANCH instruction with R type instruction above it
+                    && (OPCODE == 0b1100011 || OPCODE == 0b1100111)         // BRANCH instruction with R type instruction above it
                 )
             )
             {
@@ -1678,7 +1678,7 @@ class BranchForwardingUnit
         {
             *BranchCMPMux1 = '0';
             *BranchCMPMux2 = '0';
-            if (Branch == "0") return;
+            // if (Branch == "0") return;
             assert(BranchCMPMux1 != nullptr); 
             assert(BranchCMPMux2 != nullptr); 
             // assert(IF_ID_RegisterRs1.size() == 5); 

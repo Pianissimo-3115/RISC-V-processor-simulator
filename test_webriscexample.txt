@@ -1,4 +1,4 @@
-0:        00200413        addi x8 x0 2
+0:        00300413        addi x8 x0 3
 4:        00500493        addi x9 x0 5
 8:        00a00913        addi x18 x0 10
 c:        00100293        addi x5 x0 1
@@ -17,4 +17,4 @@ c:        00100293        addi x5 x0 1
 40:        032489b3        mul x19 x9 x18
 44:        0080006f        jal x0 8 <fine>
 48:        0324c9b3        div x19 x9 x18
-4c:        00000013        addi x0 x0 0
+4c:        00000013        addi x0 x0 0 #Should have 50 in x19 at this point

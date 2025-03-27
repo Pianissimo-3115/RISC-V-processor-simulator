@@ -17,5 +17,5 @@ c:        00112223        sw x1 4 x2
 40:        00810113        addi x2 x2 8
 44:        02a60533        mul x10 x12 x10
 48:        00008067        jalr x0 x1 0
-4c:        00500613        addi x12 x0 5
+4c:        00700613        addi x12 x0 7
 50:        fb5ff0ef        jal x1 -76 <factorialRec>

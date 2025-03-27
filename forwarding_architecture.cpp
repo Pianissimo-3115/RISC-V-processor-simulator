@@ -103,7 +103,7 @@ public:
         PCSrc_And.ConnectOutput(&IFID_RegFlush_Or.Input2[0]);
 
 
-        Register_Mem.ConnectData1Output(&JalrCalc_Adder.Input1[0]);
+        // Register_Mem.ConnectData1Output(&JalrCalc_Adder.Input1[0]);
         Register_Mem.ConnectData1Output(&ID_EX_Reg.Data[10+32]);
         Register_Mem.ConnectData1Output(&BranchCmpInp1Src_MUX.Input1[0]);
         Register_Mem.ConnectData2Output(&ID_EX_Reg.Data[10+32+32]);
@@ -118,6 +118,7 @@ public:
         BranchForward_Unit.ConnectBranchCMPMux1(&BranchCmpInp1Src_MUX.InputSwitch[0]);
         BranchForward_Unit.ConnectBranchCMPMux2(&BranchCmpInp2Src_MUX.InputSwitch[0]);
         BranchCmpInp1Src_MUX.ConnectOutput(&BranchCmp_Unit.Value1[0]);
+        BranchCmpInp1Src_MUX.ConnectOutput(&JalrCalc_Adder.Input1[0]);
         BranchCmpInp2Src_MUX.ConnectOutput(&BranchCmp_Unit.Value2[0]);
 
         // *** EX PHASE (Not eligible - Prereq not satisfied) ***
@@ -216,11 +217,11 @@ public:
         IDFlush_MUX.Step();
         Register_Mem.StepRead();
         BranchCalc_Adder.Step();
-        JalrCalc_Adder.Step();
-        JumpBranch_MUX.Step();
         BranchForward_Unit.Step();
         BranchCmpInp1Src_MUX.Step();
         BranchCmpInp2Src_MUX.Step();
+        JalrCalc_Adder.Step();
+        JumpBranch_MUX.Step();
         BranchCmp_Unit.Step();
 
         PCSrc_And.Step();
