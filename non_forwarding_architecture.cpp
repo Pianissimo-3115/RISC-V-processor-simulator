@@ -131,6 +131,7 @@ public:
         ID_EX_Reg.ConnectOutput(42, 73, &ALUSrc1_MUX.Input1[0]);
         // ID_EX_Reg.ConnectOutput(74, 105, &Input2Forwarding_MUX.Input1[0]);
         ID_EX_Reg.ConnectOutput(74, 105, &ALUSrc2_MUX.Input1[0]);
+        ID_EX_Reg.ConnectOutput(74, 105, &EX_MEM_Reg.Data[2+2+32]);
         ID_EX_Reg.ConnectOutput(106, 137, &ALUSrc2_MUX.Input2[0]);
         ID_EX_Reg.ConnectOutput(138, 144, &ALUControl_Unit.Func7[0]);
         ID_EX_Reg.ConnectOutput(145, 147, &ALUControl_Unit.Func3[0]);
@@ -250,6 +251,4 @@ public:
         
     }
 
-
-    ~RV32NonForwarding();
 };

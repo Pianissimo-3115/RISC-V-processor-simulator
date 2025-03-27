@@ -129,10 +129,10 @@ int main(int argc, char* argv[])    // terminal input: forwarding status and no 
             cout<<endl;
             curr-=4;
         }
-        for (auto x: (*rv32).DataMemory_Unit.Memory)
-        {
-            cout<<x.first<<": "<<x.second<<endl;
-        }
+        // for (auto x: (*rv32).DataMemory_Unit.Memory)
+        // {
+        //     cout<<x.first<<": "<<x.second<<endl;
+        // }
         
         
 
